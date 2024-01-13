@@ -8,7 +8,6 @@ use actix_web::{get, put, web, HttpResponse, ResponseError};
 use chrono::{DateTime, Utc};
 use derive_more::{Display, Error};
 use serde::{Deserialize, Serialize};
-use sqlx::testing::TestTermination;
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;

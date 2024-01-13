@@ -1,57 +1,84 @@
-use std::error::Error;
+use std::collections::HashMap;
+use std::sync::RwLock;
+
 use chrono::{DateTime, Utc};
-use sqlx::FromRow;
-use sqlx::sqlite::SqlitePool;
-use sqlx::sqlx_macros::migrate;
-use validator_derive::Validate;
 
-#[derive(Debug, thiserror::Error)]
-pub enum DbError {
-    #[error("NotFound")]
-    NotFound,
-
-    #[error(transparent)]
-    SqlxError(#[from] sqlx::Error),
+pub enum RepoError {
+    InMemoryError,
 }
 
 
 pub trait GreetingRepository {
     // Get all greetings
-    fn all(&self) -> Result<Vec<Greeting>, sqlx::Error>;
-
-    // Get a specific student by id
-     fn get(&self, id: &str) -> Result<Greeting, sqlx::Error>;
+    fn all(&self) -> Result<Vec<GreetingEntity>, RepoError>;
 
     // Create a new student
-     fn create(&self, student: &Greeting) -> Result<Greeting, sqlx::Error>;
-
-    // Delete a student by id
-     fn delete(&self, id: &str) -> Result<Greeting, sqlx::Error>;
+     fn store(&self, student: GreetingEntity) -> Result<(), RepoError>;
 }
 
-#[derive(Validate,Debug, FromRow, PartialEq, Eq)]
-pub struct Greeting {
-    #[validate(length(min = 1, max = 50))]
+pub struct GreetingRepositoryInMemory {
+    repo: RwLock<HashMap<usize, GreetingEntity>>
+}
+
+impl GreetingRepositoryInMemory {
+    pub fn new() -> Self {
+        GreetingRepositoryInMemory {
+            repo: RwLock::new(HashMap::new())
+        }
+    }
+}
+
+impl GreetingRepository for GreetingRepositoryInMemory {
+    fn all(&self) -> Result<Vec<GreetingEntity>, RepoError> {
+        if let Ok(result) = self.repo.read(){
+            let guarded_repo = result;
+            return Ok(guarded_repo.values().map(|f|f.clone()).collect::<Vec<_>>());
+        }
+        Err(RepoError::InMemoryError)
+    }
+
+    fn store(&self, greeting: GreetingEntity) -> Result<(), RepoError> {
+        if let Ok(mut result) = self.repo.write(){
+
+            let key = &result.len() + 1;
+            result.insert(key, greeting);
+        }
+        Err(RepoError::InMemoryError)
+    }
+}
+
+pub struct GreetingEntity {
     to: String,
-    #[validate(length(min = 1, max = 50))]
     from: String,
-    #[validate(length(min = 1, max = 50))]
     heading: String,
-    #[validate(length(min = 1, max = 200))]
     message: String,
     created: DateTime<Utc>,
 }
 
-pub struct SqliteStudentRepository {
-    pool: SqlitePool,
-}
-impl SqliteStudentRepository {
-    pub async fn new(database_url: &str) -> Result<Self, sqlx::Error> {
-        let pool = SqlitePool::connect(database_url).await?;
-        migrate!("./migrations")
-            .run(&pool)
-            .await?;
-
-        Ok(SqliteStudentRepository { pool })
+impl Clone for GreetingEntity {
+    fn clone(&self) -> Self {
+        GreetingEntity {
+            to: self.to.clone(),
+            from: self.from.clone(),
+            heading: self.heading.clone(),
+            message: self.message.clone(),
+            created: self.created.clone(),
+        }
     }
 }
+
+
+
+
+impl GreetingEntity {
+    pub fn new(to: String, from: String, heading: String, message: String) -> Self {
+        GreetingEntity {
+            to,
+            from,
+            heading,
+            message,
+            created: Utc::now(),
+        }
+    }
+}
+
