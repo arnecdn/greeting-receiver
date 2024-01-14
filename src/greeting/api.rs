@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::sync::RwLock;
 
+use actix_web::{get, HttpResponse, put, ResponseError, web};
 use actix_web::http::header::ContentType;
 use actix_web::http::StatusCode;
-use actix_web::{get, put, web, HttpResponse, ResponseError};
 use chrono::{DateTime, Utc};
 use derive_more::{Display, Error};
 use serde::{Deserialize, Serialize};
@@ -13,6 +13,7 @@ use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;
 
 use crate::greeting::api::ApiError::BadClientData;
+use crate::greeting::service::Greeting;
 
 #[utoipa::path(
     get,
@@ -92,6 +93,7 @@ pub struct GreetingDto {
     created: DateTime<Utc>,
 }
 
+
 impl GreetingDto {
     pub fn new(to: &str, from: &str, heading: &str, message: &str) -> Self {
         Self {
@@ -100,6 +102,27 @@ impl GreetingDto {
             heading: heading.to_string(),
             message: message.to_string(),
             created: Utc::now(),
+        }
+    }
+
+    pub fn to(&self) -> Greeting {
+        Greeting {
+            id: Default::default(),
+            to: self.to.clone(),
+            from: self.from.clone(),
+            heading: self.heading.clone(),
+            message: self.message.clone(),
+            created: self.created,
+        }
+    }
+
+    pub fn from(greeting: &Greeting) -> Self {
+        Self {
+            to: greeting.to.clone(),
+            from: greeting.from.clone(),
+            heading: greeting.heading.clone(),
+            message: greeting.message.clone(),
+            created: greeting.created,
         }
     }
 }

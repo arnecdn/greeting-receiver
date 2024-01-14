@@ -18,11 +18,11 @@ trait GreetingService {
 
 #[derive( Clone)]
 pub struct Greeting{
-    id: Uuid,
-    to: String,
-    from: String,
-    heading: String,
-    message: String,
-    created: DateTime<Utc>,
+    pub(crate) id: Uuid,
+    pub(crate) to: String,
+    pub(crate) from: String,
+    pub(crate) heading: String,
+    pub(crate) message: String,
+    pub(crate) created: DateTime<Utc>,
 
 }
