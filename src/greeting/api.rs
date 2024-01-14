@@ -107,7 +107,7 @@ impl GreetingDto {
 
     pub fn to(&self) -> Greeting {
         Greeting {
-            id: Default::default(),
+
             to: self.to.clone(),
             from: self.from.clone(),
             heading: self.heading.clone(),

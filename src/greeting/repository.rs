@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 
 use chrono::{DateTime, Utc};
+use uuid::Uuid;
+
 #[derive(Debug)]
 pub enum RepoError {
     InMemoryError,
@@ -49,11 +51,12 @@ impl GreetingRepository for GreetingRepositoryInMemory {
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct GreetingEntity {
-    to: String,
-    from: String,
-    heading: String,
-    message: String,
-    created: DateTime<Utc>,
+    pub(crate) id: Uuid,
+    pub(crate) to: String,
+    pub(crate)from: String,
+    pub(crate)heading: String,
+    pub(crate)message: String,
+    pub(crate)created: DateTime<Utc>,
 }
 
 
@@ -64,6 +67,7 @@ pub struct GreetingEntity {
 impl GreetingEntity {
     pub fn new(to: String, from: String, heading: String, message: String) -> Self {
         GreetingEntity {
+            id: Uuid::default(),
             to,
             from,
             heading,
