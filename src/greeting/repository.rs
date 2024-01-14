@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 
 use chrono::{DateTime, Utc};
-
+#[derive(Debug)]
 pub enum RepoError {
     InMemoryError,
 }
@@ -42,11 +42,12 @@ impl GreetingRepository for GreetingRepositoryInMemory {
 
             let key = &result.len() + 1;
             result.insert(key, greeting);
+            return Ok(());
         }
         Err(RepoError::InMemoryError)
     }
 }
-
+#[derive(Debug, PartialEq, Clone)]
 pub struct GreetingEntity {
     to: String,
     from: String,
@@ -55,17 +56,7 @@ pub struct GreetingEntity {
     created: DateTime<Utc>,
 }
 
-impl Clone for GreetingEntity {
-    fn clone(&self) -> Self {
-        GreetingEntity {
-            to: self.to.clone(),
-            from: self.from.clone(),
-            heading: self.heading.clone(),
-            message: self.message.clone(),
-            created: self.created.clone(),
-        }
-    }
-}
+
 
 
 
@@ -82,3 +73,28 @@ impl GreetingEntity {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_greeting_repository() {
+        let repo = GreetingRepositoryInMemory::new();
+
+        // Test storing a greeting
+        let greeting = GreetingEntity::new(
+            String::from("John"),
+            String::from("Mary"),
+            String::from("Happy Birthday!"),
+            String::from("Wishing you a wonderful birthday!")
+        );
+
+        repo.store(greeting.clone()).unwrap();
+
+        // Test retrieving all greetings
+        let greetings = repo.all().unwrap();
+        assert_eq!(greetings.len(), 1);
+        assert_eq!(greetings[0], greeting);
+
+    }
+}
