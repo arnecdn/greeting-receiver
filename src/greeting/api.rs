@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::fmt::Display;
 use std::sync::RwLock;
 
 use actix_web::{get, HttpResponse, put, ResponseError, web};
@@ -13,7 +12,6 @@ use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;
 
 use crate::greeting::api::ApiError::BadClientData;
-use crate::greeting::service::Greeting;
 
 #[utoipa::path(
     get,
@@ -95,36 +93,36 @@ pub struct GreetingDto {
 
 
 impl GreetingDto {
-    pub fn new(to: &str, from: &str, heading: &str, message: &str) -> Self {
-        Self {
-            to: to.to_string(),
-            from: from.to_string(),
-            heading: heading.to_string(),
-            message: message.to_string(),
-            created: Utc::now(),
-        }
-    }
-
-    pub fn to(&self) -> Greeting {
-        Greeting {
-
-            to: self.to.clone(),
-            from: self.from.clone(),
-            heading: self.heading.clone(),
-            message: self.message.clone(),
-            created: self.created,
-        }
-    }
-
-    pub fn from(greeting: &Greeting) -> Self {
-        Self {
-            to: greeting.to.clone(),
-            from: greeting.from.clone(),
-            heading: greeting.heading.clone(),
-            message: greeting.message.clone(),
-            created: greeting.created,
-        }
-    }
+    // pub fn new(to: &str, from: &str, heading: &str, message: &str) -> Self {
+    //     Self {
+    //         to: to.to_string(),
+    //         from: from.to_string(),
+    //         heading: heading.to_string(),
+    //         message: message.to_string(),
+    //         created: Utc::now(),
+    //     }
+    // }
+    //
+    // pub fn to(&self) -> Greeting {
+    //     Greeting {
+    //
+    //         to: self.to.clone(),
+    //         from: self.from.clone(),
+    //         heading: self.heading.clone(),
+    //         message: self.message.clone(),
+    //         created: self.created,
+    //     }
+    // }
+    //
+    // pub fn from(greeting: &Greeting) -> Self {
+    //     Self {
+    //         to: greeting.to.clone(),
+    //         from: greeting.from.clone(),
+    //         heading: greeting.heading.clone(),
+    //         message: greeting.message.clone(),
+    //         created: greeting.created,
+    //     }
+    // }
 }
 
 #[cfg(test)]
@@ -135,7 +133,7 @@ mod test {
 
     #[actix_web::test]
     async fn test_read_greeting() {
-        let mut repo = HashMap::new();
+        let  repo = HashMap::new();
 
         let app = test::init_service(crate::test_app!(repo, list_greetings)).await;
 

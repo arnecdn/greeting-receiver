@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use std::fmt::Display;
+
 use std::sync::RwLock;
 
-use actix_web::{App, FromRequest, HttpServer, Responder};
+use actix_web::{App,  HttpServer};
 use actix_web::web::Data;
-use serde::{Deserialize, Deserializer, Serialize};
-use utoipa::{OpenApi, ToSchema};
+// use serde::{Deserialize, Deserializer, Serialize};
+use utoipa::{OpenApi};
 use utoipa_swagger_ui::SwaggerUi;
 
 use greeting::api;
