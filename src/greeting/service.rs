@@ -9,8 +9,6 @@ enum ServiceError{
 
 trait GreetingService {
     fn receive_greeting(&self, greeting: Greeting) -> Result<Greeting, ServiceError>;
-    fn read_greeting(&self, id: Uuid) -> Result<Greeting, ServiceError>;
-
     fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError>;
 
 }
@@ -19,7 +17,6 @@ trait GreetingService {
 
 #[derive( Clone)]
 pub struct Greeting{
-
     pub(crate) to: String,
     pub(crate) from: String,
     pub(crate) heading: String,
@@ -29,19 +26,8 @@ pub struct Greeting{
 }
 
 impl Greeting {
-    pub fn new(to: String, from: String, heading: String, message: String) -> Greeting {
-        Greeting {
-
-            to,
-            from,
-            heading,
-            message,
-            created: Utc::now(),
-        }
-    }
 
     pub fn from(greeting: GreetingEntity) -> Greeting {Greeting {
-
         to: greeting.to,
         from: greeting.from,
         heading: greeting.heading,
@@ -54,10 +40,6 @@ impl Greeting {
 impl GreetingService for Greeting {
     fn receive_greeting(&self, greeting: Greeting) -> Result<Greeting, ServiceError> {
         Ok(greeting)
-    }
-
-    fn read_greeting(&self, id: Uuid) -> Result<Greeting, ServiceError> {
-        Ok(self.clone())
     }
 
     fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError> {
