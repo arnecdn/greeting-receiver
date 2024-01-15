@@ -16,7 +16,7 @@ pub trait GreetingRepository {
     // Get all greetings
     fn all(&self) -> Result<Vec<Greeting>, ServiceError>;
 
-    // Create a new student
+    // Create a new greeting
     fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError>;
 }
 

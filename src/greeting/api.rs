@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::RwLock;
 
-use actix_web::{get, HttpResponse, put, ResponseError, web};
+use actix_web::{get, HttpResponse, post, ResponseError, web};
 use actix_web::http::header::ContentType;
 use actix_web::http::StatusCode;
 use chrono::{DateTime, Utc};
@@ -31,14 +31,14 @@ pub async fn list_greetings(
 }
 
 #[utoipa::path(
-    put,
+    post,
     path = "/greeting",
     responses(
         (status = 201, description = "Greeting successfully stored", body = GreetingDto),
         (status = NOT_FOUND, description = "Resource not found")
     ),
     )]
-#[put("/greeting")]
+#[post("/greeting")]
 pub async fn greet(
     data: web::Data<RwLock<HashMap<usize, GreetingDto>>>,
     greeting: web::Json<GreetingDto>,
@@ -150,7 +150,7 @@ mod test {
     async fn test_store_greeting() {
         let app = test::init_service(crate::test_app!(HashMap::new(), greet)).await;
 
-        let req = test::TestRequest::put()
+        let req = test::TestRequest::post()
             .uri("/greeting")
             .insert_header(actix_web::http::header::ContentType::json())
             .set_json(GreetingDto {
@@ -170,7 +170,7 @@ mod test {
     async fn test_invalid_greeting() {
         let app = test::init_service(crate::test_app!(HashMap::new(), greet)).await;
 
-        let req = test::TestRequest::put()
+        let req = test::TestRequest::post()
             .uri("/greeting")
             .insert_header(actix_web::http::header::ContentType::json())
             .set_json(GreetingDto {
