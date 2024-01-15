@@ -27,7 +27,7 @@ struct GreetingServiceImpl{
 impl GreetingServiceImpl {
     pub fn new(repo: Box<dyn GreetingRepository>) -> Box<GreetingServiceImpl> {
         Box::new(GreetingServiceImpl {
-            repo: repo
+            repo
         })
     }
 }

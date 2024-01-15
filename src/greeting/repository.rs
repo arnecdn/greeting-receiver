@@ -23,9 +23,9 @@ pub struct GreetingRepositoryInMemory {
 }
 
 impl GreetingRepositoryInMemory {
-    pub fn new() -> Self {
+    pub fn new(map_store: HashMap<usize, GreetingEntity>) -> Self {
         GreetingRepositoryInMemory {
-            repo: RwLock::new(HashMap::new())
+            repo: RwLock::new(map_store)
         }
     }
 }
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn test_greeting_repository() {
-        let mut repo = GreetingRepositoryInMemory::new();
+        let mut repo = GreetingRepositoryInMemory::new(HashMap::new());
 
         // Test storing a greeting
         let greeting_entity = GreetingEntity::new(
