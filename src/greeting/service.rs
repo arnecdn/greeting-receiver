@@ -1,7 +1,8 @@
 use chrono::{DateTime, Utc};
+use derive_more::{Display, Error};
 
 // use crate::greeting::repository::{ GreetingRepository};
-#[derive(Debug)]
+#[derive(Debug, Display, Error)]
 pub enum ServiceError{
     UnrecognizedGreetingError,
 }
@@ -20,19 +21,20 @@ pub trait GreetingRepository {
     fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError>;
 }
 
-struct GreetingServiceImpl{
-    repo: Box<dyn GreetingRepository>
+// #[derive(Clone)]
+pub struct GreetingServiceImpl<C:GreetingRepository>{
+    repo: C
 }
 
-impl GreetingServiceImpl {
-    pub fn new(repo: Box<dyn GreetingRepository>) -> Box<GreetingServiceImpl> {
-        Box::new(GreetingServiceImpl {
+impl <C:GreetingRepository> GreetingServiceImpl<C> {
+    pub fn new(repo: C) -> GreetingServiceImpl<C> {
+        GreetingServiceImpl {
             repo
-        })
+        }
     }
 }
 
-impl GreetingService for GreetingServiceImpl {
+impl <C:GreetingRepository> GreetingService for GreetingServiceImpl<C>  {
     fn receive_greeting(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
         self.repo.store(greeting)
     }
@@ -71,7 +73,7 @@ mod tests {
     fn test_receive_greeting() {
         // Arrange
         let  mock_repo = MockGreetingRepository::new();
-        let mut service = GreetingServiceImpl::new(Box::new(mock_repo));
+        let mut service = GreetingServiceImpl::new(mock_repo);
 
         let greeting = Greeting::new(String::from("John"), String::from("Jane"), String::from("Hello"), String::from("Hi John!"));
 
@@ -102,7 +104,7 @@ impl GreetingRepository for MockGreetingRepository {
     }
 
     fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
-        let repo = &mut self.greetings;
+        let  repo = &mut self.greetings;
         repo.push(greeting);
         Ok(())
     }

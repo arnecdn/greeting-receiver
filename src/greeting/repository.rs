@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
+use actix_web::web::Data;
 
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
@@ -17,36 +18,37 @@ impl From<RepoError> for ServiceError {
     }
 }
 
-
+// #[derive(Clone)]
 pub struct GreetingRepositoryInMemory {
-    repo: RwLock<HashMap<usize, GreetingEntity>>
+    repo: HashMap<usize, GreetingEntity>
 }
 
+
+
 impl GreetingRepositoryInMemory {
-    pub fn new(map_store: HashMap<usize, GreetingEntity>) -> Self {
+    pub fn new(mut map_store:HashMap<usize, GreetingEntity>) -> Self {
         GreetingRepositoryInMemory {
-            repo: RwLock::new(map_store)
+            repo: map_store
         }
     }
 }
 
+
 impl GreetingRepository for GreetingRepositoryInMemory {
     fn all(&self) -> Result<Vec<Greeting>, ServiceError> {
-        if let Ok(result) = self.repo.read(){
-            let guarded_repo = result;
-            return Ok(guarded_repo.values().map(|g|Greeting::from(g.clone())).collect::<Vec<_>>());
+
+        if let result = self.repo.values(){
+            return Ok(result.map(|g|Greeting::from(g.clone())).collect::<Vec<_>>());
         }
         Err(ServiceError::from(RepoError::InMemoryError))
     }
 
     fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
-        if let Ok(mut result) = self.repo.write(){
 
-            let key = &result.len() + 1;
-            result.insert(key, GreetingEntity::from(greeting));
+            let key = self.repo.len() + 1;
+            self.repo.insert(key, GreetingEntity::from(greeting));
             return Ok(());
-        }
-        Err(ServiceError::from(RepoError::InMemoryError))
+        // Err(ServiceError::from(RepoError::InMemoryError))
     }
 }
 #[derive(Debug, PartialEq, Clone)]

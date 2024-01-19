@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 
 use actix_web::{App,  HttpServer};
 use actix_web::web::Data;
@@ -8,7 +8,7 @@ use actix_web::web::Data;
 use utoipa::{OpenApi};
 use utoipa_swagger_ui::SwaggerUi;
 
-use greeting::api;
+use greeting::{api,repository, service};
 
 mod greeting;
 
@@ -21,12 +21,18 @@ async fn main() -> std::io::Result<()> {
     components(schemas(api::GreetingDto))
     )]
     struct ApiDoc;
-    let greeting_store: Data<RwLock<HashMap<usize, api::GreetingDto>>> =
-        Data::new(RwLock::new(HashMap::new()));
+
+    let data = HashMap::new();
+    let repo = repository::GreetingRepositoryInMemory::new(data);
+    let svc = Data::new(RwLock::new(service::GreetingServiceImpl::new(repo)));
+
+    std::env::set_var("RUST_LOG", "debug");
+    env_logger::init();
 
     HttpServer::new(move || {
+
         App::new()
-            .app_data(greeting_store.clone())
+            .app_data(svc.clone())
             .service(api::greet)
             .service(api::list_greetings)
             .service(

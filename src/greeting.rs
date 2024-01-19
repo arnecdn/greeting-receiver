@@ -1,3 +1,3 @@
 pub mod repository;
 pub mod api;
-mod service;
+pub mod service;
