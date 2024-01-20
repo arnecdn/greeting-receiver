@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 use derive_more::{Display, Error};
 
-// use crate::greeting::repository::{ GreetingRepository};
 #[derive(Debug, Display, Error)]
 pub enum ServiceError{
     UnrecognizedGreetingError,
@@ -14,14 +13,11 @@ pub trait GreetingService {
 }
 
 pub trait GreetingRepository {
-    // Get all greetings
     fn all(&self) -> Result<Vec<Greeting>, ServiceError>;
 
-    // Create a new greeting
     fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError>;
 }
 
-// #[derive(Clone)]
 pub struct GreetingServiceImpl<C>{
     repo: C
 }

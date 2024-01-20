@@ -11,7 +11,7 @@ use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;
 
-use crate::greeting::api::ApiError::{ApplicationError, BadClientData};
+use crate::greeting::api::ApiError::{ApplicationError, BadClientData, Applicationerror};
 use crate::greeting::service::{Greeting, GreetingService, ServiceError};
 
 #[utoipa::path(
@@ -26,12 +26,13 @@ use crate::greeting::service::{Greeting, GreetingService, ServiceError};
 pub  async fn  list_greetings(
     data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
 ) -> Result<HttpResponse, ApiError>  {
+
     if let Ok( read_guard) = data.read(){
         let greetings = read_guard.all_greetings()?
             .iter().map(|f|GreetingDto::from(f.clone())).collect::<Vec<_>>();
         return Ok(HttpResponse::Ok().json(greetings));
     }
-    Err(ApiError::Error)
+    Err(ApiError::Applicationerror)
 
 }
 
@@ -48,17 +49,22 @@ pub async fn greet(
     data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
+
     greeting.validate()?;
 
-    data.write().unwrap().receive_greeting(Greeting::from(greeting.0))?;
-    Ok(HttpResponse::Ok().body(""))
+    if let Ok(mut guard) = data.write(){
+        guard.receive_greeting(Greeting::from(greeting.0))?;
+        return Ok(HttpResponse::Ok().body(""));
+    }
+
+    Err(Applicationerror)
 }
 
 #[derive(Debug, Display, Error)]
 pub enum ApiError {
     BadClientData(ValidationErrors),
     ApplicationError(ServiceError),
-    Error
+    Applicationerror
 }
 
 impl ResponseError for ApiError {
