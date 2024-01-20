@@ -36,7 +36,7 @@ impl GreetingRepository for GreetingRepositoryInMemory {
 
     fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
         let key = self.repo.len() + 1;
-        if let Some(_) = self.repo.insert(key, GreetingEntity::from(greeting)) {
+        if let None = self.repo.insert(key, GreetingEntity::from(greeting)) {
             return Ok(());
         }
         Err(ServiceError::from(RepoError::InMemoryError))
@@ -77,6 +77,18 @@ impl From<GreetingEntity> for Greeting {
     }
 }
 
+impl GreetingEntity {
+    pub fn new(to: String, from: String, heading: String, message: String) -> Self {
+        GreetingEntity {
+            id: Uuid::default(),
+            to,
+            from,
+            heading,
+            message,
+            created: Utc::now(),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
