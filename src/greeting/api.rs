@@ -32,7 +32,7 @@ pub  async fn  list_greetings(
             .iter().map(|f|GreetingDto::from(f.clone())).collect::<Vec<_>>();
         return Ok(HttpResponse::Ok().json(greetings));
     }
-    Err(ApiError::Applicationerror)
+    Err(Applicationerror)
 
 }
 
@@ -68,18 +68,18 @@ pub enum ApiError {
 }
 
 impl ResponseError for ApiError {
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code())
-            .insert_header(ContentType::json())
-            .body(self.to_string())
-    }
-
     fn status_code(&self) -> StatusCode {
         match *self {
             BadClientData(_) => StatusCode::BAD_REQUEST,
             ApplicationError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             _ => StatusCode::INTERNAL_SERVER_ERROR
         }
+    }
+
+    fn error_response(&self) -> HttpResponse {
+        HttpResponse::build(self.status_code())
+            .insert_header(ContentType::json())
+            .body(self.to_string())
     }
 }
 
