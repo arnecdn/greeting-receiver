@@ -22,7 +22,7 @@ pub trait GreetingRepository {
 }
 
 // #[derive(Clone)]
-pub struct GreetingServiceImpl<C:GreetingRepository>{
+pub struct GreetingServiceImpl<C>{
     repo: C
 }
 

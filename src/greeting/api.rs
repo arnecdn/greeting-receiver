@@ -1,20 +1,18 @@
-use std::collections::HashMap;
 use std::sync::RwLock;
 
 use actix_web::{get, HttpResponse, post, ResponseError, web};
 use actix_web::http::header::ContentType;
 use actix_web::http::StatusCode;
-
+use actix_web::web::Data;
 use chrono::{DateTime, Utc};
 use derive_more::{Display, Error};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use validator::{Validate, ValidationErrors};
+use validator::{Validate, ValidateArgs, ValidationErrors};
 use validator_derive::Validate;
 
 use crate::greeting::api::ApiError::{ApplicationError, BadClientData};
-use crate::greeting::repository::GreetingRepositoryInMemory;
-use crate::greeting::service::{Greeting, GreetingService, GreetingServiceImpl, ServiceError};
+use crate::greeting::service::{Greeting, GreetingRepository, GreetingService, ServiceError};
 
 #[utoipa::path(
     get,
@@ -25,9 +23,9 @@ use crate::greeting::service::{Greeting, GreetingService, GreetingServiceImpl, S
     )
     )]
 #[get("/greeting")]
-pub async fn list_greetings(
-    data: web::Data< RwLock<GreetingServiceImpl<GreetingRepositoryInMemory>>>,
-) -> Result<HttpResponse, ApiError> {
+pub  async fn  list_greetings(
+    data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
+) -> Result<HttpResponse, ApiError>  {
     if let Ok( read_guard) = data.read(){
         let greetings = read_guard.all_greetings()?
             .iter().map(|f|GreetingDto::from(f.clone())).collect::<Vec<_>>();
@@ -47,7 +45,7 @@ pub async fn list_greetings(
     )]
 #[post("/greeting")]
 pub async fn greet(
-    mut data: web::Data< RwLock<GreetingServiceImpl<GreetingRepositoryInMemory>>>,
+    mut data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
     greeting.validate()?;
@@ -132,34 +130,18 @@ impl From<Greeting> for GreetingDto {
 
 #[cfg(test)]
 mod test {
-    use std::vec;
     use actix_web::test;
 
     use super::*;
 
     #[actix_web::test]
     async fn test_read_greeting() {
-        // let  repo = HashMap::new();
-        #[derive(Clone)]
-        struct Me;
 
-        impl  GreetingService for Me{
-            fn receive_greeting(&mut self, greeting: Greeting) -> Result<(), ServiceError>{
-                Ok(())
-            }
-            fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError>{
-                return Ok(vec![Greeting::new(String::from(""),String::from(""),String::from(""),String::from(""))]);
-            }
-        };
-
-
-
-
+        let data: Data<RwLock<Box<dyn GreetingService+ Sync + Send >>> = Data::new(RwLock::new(Box::new(GreetingSvcStub {  })));
         let app = test::init_service(
             actix_web::App::new()
-                .app_data(Me{}.clone())
+                .app_data(data.clone())
                 .service(list_greetings)
-
         ).await;
 
         let req = test::TestRequest::get()
@@ -168,67 +150,71 @@ mod test {
             .to_request();
 
         let resp = test::call_service(&app, req).await;
+
         assert!(resp.status().is_success());
     }
 
-    // #[actix_web::test]
-    // async fn test_store_greeting() {
-    //     let app = test::init_service(crate::test_app!(HashMap::new(), greet)).await;
-    //
-    //     let req = test::TestRequest::post()
-    //         .uri("/greeting")
-    //         .insert_header(actix_web::http::header::ContentType::json())
-    //         .set_json(GreetingDto {
-    //             to: String::from("test"),
-    //             from: String::from("testa"),
-    //             heading: String::from("Merry Christmas"),
-    //             message: String::from("Happy new year"),
-    //             created: DateTime::default(),
-    //         })
-    //         .to_request();
-    //
-    //     let resp = test::call_service(&app, req).await;
-    //     assert!(resp.status().is_success());
-    // }
+    #[actix_web::test]
+    async fn test_store_greeting() {
+        let data: Data<RwLock<Box<dyn GreetingService+ Sync + Send >>> = Data::new(RwLock::new(Box::new(GreetingSvcStub {  })));
+        let app = test::init_service(
+            actix_web::App::new()
+                .app_data(data.clone())
+                .service(greet)
+        ).await;
 
-    // #[actix_web::test]
-    // async fn test_invalid_greeting() {
-    //     let app = test::init_service(crate::test_app!(HashMap::new(), greet)).await;
-    //
-    //     let req = test::TestRequest::post()
-    //         .uri("/greeting")
-    //         .insert_header(actix_web::http::header::ContentType::json())
-    //         .set_json(GreetingDto {
-    //             to: String::from("testtesttesttesttesttesttesttest"),
-    //             from: String::from("testa"),
-    //             heading: String::from("Merry Christmas"),
-    //             message: String::from("Happy new year"),
-    //             created: DateTime::default(),
-    //         })
-    //         .to_request();
-    //
-    //     let resp = test::call_service(&app, req).await;
-    //     assert!(resp.status().is_client_error());
-    //     println!("{:?}", resp.response().body());
-    // }
+        let req = test::TestRequest::post()
+            .uri("/greeting")
+            .insert_header(actix_web::http::header::ContentType::json())
+            .set_json(GreetingDto {
+                to: String::from("test"),
+                from: String::from("testa"),
+                heading: String::from("Merry Christmas"),
+                message: String::from("Happy new year"),
+                created: DateTime::default(),
+            })
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_success());
+    }
+
+    #[actix_web::test]
+    async fn test_invalid_greeting() {
+        let data: Data<RwLock<Box<dyn GreetingService+ Sync + Send >>> = Data::new(RwLock::new(Box::new(GreetingSvcStub {  })));
+        let app = test::init_service(
+            actix_web::App::new()
+                .app_data(data.clone())
+                .service(greet)
+        ).await;
+
+        let req = test::TestRequest::post()
+            .uri("/greeting")
+            .insert_header(actix_web::http::header::ContentType::json())
+            .set_json(GreetingDto {
+                to: String::from("testtesttesttesttesttesttesttest"),
+                from: String::from("testa"),
+                heading: String::from("Merry Christmas"),
+                message: String::from("Happy new year"),
+                created: DateTime::default(),
+            })
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_client_error());
+        println!("{:?}", resp.response().body());
+    }
 }
-//
-// #[macro_export]
-// macro_rules! test_app {
-//     ($data:expr,$service:expr) => {{
-//           let s = ||-> dyn GreetingService{
-//             fn receive_greeting(&mut self,  greeting: Greeting) -> Result<(), ServiceError>{
-//                 Ok(ok)
-//             }
-//             fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError>{
-//                 return Ok(())
-//             }
-//         };
-//         let greeting_store: actix_web::web::Data<RwLock<HashMap<usize, GreetingDto>>> =
-//             actix_web::web::Data::new(RwLock::new($data));
-//
-//         actix_web::App::new()
-//             .app_data(s.clone())
-//             .service($service)
-//     }};
-// }
+#[derive(Clone)]
+struct GreetingSvcStub ;
+
+impl GreetingService for GreetingSvcStub {
+
+    fn receive_greeting(&mut self, _: Greeting) -> Result<(), ServiceError>{
+        Ok(())
+    }
+    fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError>{
+        return Ok(vec![]);
+    }
+}
+

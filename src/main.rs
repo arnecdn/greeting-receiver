@@ -9,6 +9,8 @@ use utoipa::{OpenApi};
 use utoipa_swagger_ui::SwaggerUi;
 
 use greeting::{api,repository, service};
+use crate::greeting::repository::GreetingRepositoryInMemory;
+use crate::greeting::service::{GreetingRepository, GreetingService, GreetingServiceImpl};
 
 mod greeting;
 
@@ -22,9 +24,8 @@ async fn main() -> std::io::Result<()> {
     )]
     struct ApiDoc;
 
-    let data = HashMap::new();
-    let repo = repository::GreetingRepositoryInMemory::new(data);
-    let svc = Data::new(RwLock::new(service::GreetingServiceImpl::new(repo)));
+    let repo = GreetingRepositoryInMemory::new(HashMap::new());
+    let svc:  Data<RwLock<Box<dyn GreetingService+ Sync + Send >>>  = Data::new(RwLock::new(Box::new(service::GreetingServiceImpl::new(repo))));
 
     std::env::set_var("RUST_LOG", "debug");
     env_logger::init();
