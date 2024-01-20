@@ -8,11 +8,11 @@ use chrono::{DateTime, Utc};
 use derive_more::{Display, Error};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use validator::{Validate, ValidateArgs, ValidationErrors};
+use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;
 
 use crate::greeting::api::ApiError::{ApplicationError, BadClientData};
-use crate::greeting::service::{Greeting, GreetingRepository, GreetingService, ServiceError};
+use crate::greeting::service::{Greeting, GreetingService, ServiceError};
 
 #[utoipa::path(
     get,
@@ -45,7 +45,7 @@ pub  async fn  list_greetings(
     )]
 #[post("/greeting")]
 pub async fn greet(
-    mut data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
+    data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
     greeting.validate()?;

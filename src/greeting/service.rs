@@ -54,17 +54,6 @@ pub struct Greeting{
     pub(crate) created: DateTime<Utc>,
 }
 
-impl Greeting {
-    pub fn new(to: String, from: String, heading: String, message: String) -> Greeting {
-        Greeting {
-            to,
-            from,
-            heading,
-            message,
-            created: Utc::now(),
-        }
-    }
-}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -90,13 +79,6 @@ struct MockGreetingRepository {
      greetings: Vec<Greeting>
 }
 
-impl MockGreetingRepository {
-    fn new() -> Self {
-        Self {
-            greetings: Vec::new()
-        }
-    }
-}
 
 impl GreetingRepository for MockGreetingRepository {
     fn all(&self) -> Result<Vec<Greeting>, ServiceError> {

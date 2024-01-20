@@ -1,16 +1,15 @@
 use std::collections::HashMap;
 
-use std::sync::{Arc, RwLock};
+use std::sync::{RwLock};
 
 use actix_web::{App,  HttpServer};
 use actix_web::web::Data;
-// use serde::{Deserialize, Deserializer, Serialize};
 use utoipa::{OpenApi};
 use utoipa_swagger_ui::SwaggerUi;
 
-use greeting::{api,repository, service};
+use greeting::{api,service};
 use crate::greeting::repository::GreetingRepositoryInMemory;
-use crate::greeting::service::{GreetingRepository, GreetingService, GreetingServiceImpl};
+use crate::greeting::service::{ GreetingService};
 
 mod greeting;
 
@@ -25,6 +24,7 @@ async fn main() -> std::io::Result<()> {
     struct ApiDoc;
 
     let repo = GreetingRepositoryInMemory::new(HashMap::new());
+    //Need explicit type in order to enforce type restrictions with dynamoc trait object allocation
     let svc:  Data<RwLock<Box<dyn GreetingService+ Sync + Send >>>  = Data::new(RwLock::new(Box::new(service::GreetingServiceImpl::new(repo))));
 
     std::env::set_var("RUST_LOG", "debug");
