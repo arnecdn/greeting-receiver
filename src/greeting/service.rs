@@ -1,10 +1,6 @@
 use chrono::{DateTime, Utc};
 use derive_more::{Display, Error};
 
-#[derive(Debug, Display, Error)]
-pub enum ServiceError{
-    UnrecognizedGreetingError,
-}
 
 pub trait GreetingService {
     fn receive_greeting(&mut self,  greeting: Greeting) -> Result<(), ServiceError>;
@@ -18,6 +14,8 @@ pub trait GreetingRepository {
     fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError>;
 }
 
+
+
 pub struct GreetingServiceImpl<C>{
     repo: C
 }
@@ -30,6 +28,7 @@ impl <C:GreetingRepository> GreetingServiceImpl<C> {
     }
 }
 
+
 impl <C:GreetingRepository> GreetingService for GreetingServiceImpl<C>  {
     fn receive_greeting(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
         self.repo.store(greeting)
@@ -40,6 +39,10 @@ impl <C:GreetingRepository> GreetingService for GreetingServiceImpl<C>  {
     }
 }
 
+#[derive(Debug, Display, Error)]
+pub enum ServiceError{
+    UnrecognizedGreetingError,
+}
 
 #[derive( Clone,PartialEq, Debug)]
 pub struct Greeting{
@@ -81,29 +84,31 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(service.all_greetings().unwrap(), vec![greeting]);
     }
-}
 
-struct MockGreetingRepository {
-     greetings: Vec<Greeting>
-}
 
-impl MockGreetingRepository {
-    fn new() -> Self {
-        Self {
-            greetings: Vec::new()
+    struct MockGreetingRepository {
+        greetings: Vec<Greeting>
+    }
+
+    impl MockGreetingRepository {
+        fn new() -> Self {
+            Self {
+                greetings: Vec::new()
+            }
         }
     }
-}
-impl GreetingRepository for MockGreetingRepository {
-    fn all(&self) -> Result<Vec<Greeting>, ServiceError> {
-        Ok(self.greetings.clone())
+    impl GreetingRepository for MockGreetingRepository {
+        fn all(&self) -> Result<Vec<Greeting>, ServiceError> {
+            Ok(self.greetings.clone())
+        }
+
+        fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
+            let  repo = &mut self.greetings;
+            repo.push(greeting);
+            Ok(())
+        }
     }
 
-    fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
-        let  repo = &mut self.greetings;
-        repo.push(greeting);
-        Ok(())
-    }
 }
 
 

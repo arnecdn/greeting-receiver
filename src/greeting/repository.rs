@@ -5,16 +5,6 @@ use uuid::Uuid;
 
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
 
-#[derive(Debug)]
-pub enum RepoError {
-    InMemoryError,
-}
-
-impl From<RepoError> for ServiceError {
-    fn from(_error: RepoError) -> Self {
-        ServiceError::UnrecognizedGreetingError
-    }
-}
 
 pub struct GreetingRepositoryInMemory {
     repo: HashMap<usize, GreetingEntity>,
@@ -87,6 +77,17 @@ impl GreetingEntity {
             message,
             created: Utc::now(),
         }
+    }
+}
+
+#[derive(Debug)]
+pub enum RepoError {
+    InMemoryError,
+}
+
+impl From<RepoError> for ServiceError {
+    fn from(_error: RepoError) -> Self {
+        ServiceError::UnrecognizedGreetingError
     }
 }
 
