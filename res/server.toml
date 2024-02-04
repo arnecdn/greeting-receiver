@@ -1,0 +1,10 @@
+[kafka]
+broker = "localhost:29092"
+topic = "greeting"
+message_timeout_ms = 5000
+enable_idempotence = true
+processing_guarantee = "exactly_once"
+[postgres]
+database_url = "postgres://greeting_rust:greeting_rust@localhost:5432/greeting_rust"
+user = "greeting_rust"
+password = "greeting_rust"

@@ -4,7 +4,7 @@ use actix_web::{get, HttpResponse, post, ResponseError, web};
 use actix_web::http::header::ContentType;
 use actix_web::http::StatusCode;
 use actix_web::web::Data;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use derive_more::{Display, Error};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
@@ -117,7 +117,7 @@ impl From<GreetingDto> for Greeting{
             from: greeting.from.clone(),
             heading: greeting.heading.clone(),
             message: greeting.message.clone(),
-            created: greeting.created,
+            created: greeting.created.naive_utc(),
         }
     }
 }
@@ -128,7 +128,7 @@ impl From<Greeting> for GreetingDto {
             from: greeting.from.clone(),
             heading: greeting.heading.clone(),
             message: greeting.message.clone(),
-            created: greeting.created,
+            created: greeting.created.and_utc(),
         }
     }
 }

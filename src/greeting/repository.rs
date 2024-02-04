@@ -1,37 +1,12 @@
-use std::collections::HashMap;
-
-use chrono::{DateTime, Utc};
+use chrono::NaiveDateTime;
+use futures::executor::block_on;
+use sqlx::{Error, migrate, Pool, Postgres};
+use sqlx::migrate::MigrateError;
+use sqlx::postgres::PgPoolOptions;
 use uuid::Uuid;
 
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
 
-
-pub struct GreetingRepositoryInMemory {
-    repo: HashMap<usize, GreetingEntity>,
-}
-
-impl GreetingRepositoryInMemory {
-    pub fn new(map_store: HashMap<usize, GreetingEntity>) -> Self {
-        GreetingRepositoryInMemory { repo: map_store }
-    }
-}
-
-impl GreetingRepository for GreetingRepositoryInMemory {
-    fn all(&self) -> Result<Vec<Greeting>, ServiceError> {
-        let result = self.repo.values();
-        Ok(result
-            .map(|g| Greeting::from(g.clone()))
-            .collect::<Vec<_>>())
-    }
-
-    fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
-        let key = self.repo.len() + 1;
-        if let None = self.repo.insert(key, GreetingEntity::from(greeting)) {
-            return Ok(());
-        }
-        Err(ServiceError::from(RepoError::InMemoryError))
-    }
-}
 #[derive(Debug, PartialEq, Clone)]
 pub struct GreetingEntity {
     pub(crate) id: Uuid,
@@ -39,13 +14,15 @@ pub struct GreetingEntity {
     pub(crate) from: String,
     pub(crate) heading: String,
     pub(crate) message: String,
-    pub(crate) created: DateTime<Utc>,
+    pub(crate) created: NaiveDateTime,
 }
+
+
 
 impl From<Greeting> for GreetingEntity {
     fn from(greeting: Greeting) -> Self {
         GreetingEntity {
-            id: Uuid::default(),
+            id:  Uuid::now_v7(),
             to: greeting.to,
             from: greeting.from,
             heading: greeting.heading,
@@ -70,19 +47,20 @@ impl From<GreetingEntity> for Greeting {
 impl GreetingEntity {
     pub fn new(to: String, from: String, heading: String, message: String) -> Self {
         GreetingEntity {
-            id: Uuid::default(),
+            id: Default::default(),
             to,
             from,
             heading,
             message,
-            created: Utc::now(),
+            created: NaiveDateTime::default(),
         }
     }
 }
 
 #[derive(Debug)]
 pub enum RepoError {
-    InMemoryError,
+    DbError(Error),
+    DbMigrationError(MigrateError)
 }
 
 impl From<RepoError> for ServiceError {
@@ -91,32 +69,81 @@ impl From<RepoError> for ServiceError {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_greeting_repository() {
-        let mut repo = GreetingRepositoryInMemory::new(HashMap::new());
-
-        // Test storing a greeting
-        let greeting_entity = GreetingEntity::new(
-            String::from("John"),
-            String::from("Mary"),
-            String::from("Happy Birthday!"),
-            String::from("Wishing you a wonderful birthday!"),
-        );
-
-        repo.store(Greeting::from(greeting_entity.clone())).unwrap();
-
-        // Test retrieving all greetings
-        let greetings = repo
-            .all()
-            .unwrap()
-            .iter()
-            .map(|g| GreetingEntity::from(g.clone()))
-            .collect::<Vec<_>>();
-        assert_eq!(greetings.len(), 1);
-        assert_eq!(greetings[0], greeting_entity);
+impl From<Error> for RepoError{
+    fn from(value: Error) -> Self {
+        RepoError::DbError(value)
     }
 }
+
+impl From<MigrateError> for RepoError {
+    fn from(value: MigrateError) -> Self {
+        RepoError::DbMigrationError(value)
+    }
+}
+
+pub struct SqliteStudentRepository<T: sqlx::Database> {
+    pool: Pool<T>,
+}
+
+impl  SqliteStudentRepository<Postgres> {
+    pub async fn new(database_url: &str) -> Result<Self, RepoError> {
+
+        let pool = PgPoolOptions::new()
+            .max_connections(100)
+            .connect(database_url).await?;
+        migrate!("./migrations")
+            .run(&pool).await?;
+        Ok(SqliteStudentRepository{pool})
+    }
+}
+
+impl GreetingRepository for SqliteStudentRepository<Postgres> {
+     fn all(&self) -> Result<Vec<Greeting>, ServiceError> {
+        let greetings = sqlx::query_as!
+            (GreetingEntity, "SELECT id, \"from\", \"to\", heading, message, created FROM greeting ")
+            .fetch_all(&self.pool);
+        let r = block_on(greetings);
+         Ok(match r {
+             Ok(v) => v.iter().map(|v| Greeting::from(v.clone())).collect::<Vec<_>>(),
+             Err(_)=> return Err(ServiceError::UnrecognizedGreetingError)
+         })
+    }
+
+     fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
+         let new_greeting = GreetingEntity::from(greeting);
+        let res = sqlx::query_as!(GreetingEntity,"INSERT INTO greeting(\"from\", \"to\", heading, message, created) VALUES ($1, $2, $3, $4, $5)",
+            new_greeting.from,new_greeting.to, new_greeting.heading, new_greeting.message, new_greeting.created)
+            .fetch_all(&self.pool);
+        block_on(res).expect("Failed to store new greeting");
+        Ok(())
+    }
+}
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//
+//     #[test]
+//     fn test_greeting_repository() {
+//         let mut repo = GreetingRepositoryInMemory::new(HashMap::new());
+//
+//         // Test storing a greeting
+//         let greeting_entity = GreetingEntity::new(
+//             String::from("John"),
+//             String::from("Mary"),
+//             String::from("Happy Birthday!"),
+//             String::from("Wishing you a wonderful birthday!"),
+//         );
+//
+//         repo.store(Greeting::from(greeting_entity.clone())).unwrap();
+//
+//         // Test retrieving all greetings
+//         let greetings = repo
+//             .all()
+//             .unwrap()
+//             .iter()
+//             .map(|g| GreetingEntity::from(g.clone()))
+//             .collect::<Vec<_>>();
+//         assert_eq!(greetings.len(), 1);
+//         assert_eq!(greetings[0], greeting_entity);
+//     }
+// }

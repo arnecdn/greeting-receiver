@@ -1,6 +1,5 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use derive_more::{Display, Error};
-
 
 pub trait GreetingService {
     fn receive_greeting(&mut self,  greeting: Greeting) -> Result<(), ServiceError>;
@@ -46,11 +45,12 @@ pub enum ServiceError{
 
 #[derive( Clone,PartialEq, Debug)]
 pub struct Greeting{
+
     pub(crate) to: String,
     pub(crate) from: String,
     pub(crate) heading: String,
     pub(crate) message: String,
-    pub(crate) created: DateTime<Utc>,
+    pub(crate) created: NaiveDateTime,
 }
 
 impl Greeting {
@@ -60,7 +60,7 @@ impl Greeting {
             from,
             heading,
             message,
-            created: Utc::now(),
+            created: NaiveDateTime::default(),
         }
     }
 }
