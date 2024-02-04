@@ -111,8 +111,8 @@ impl GreetingRepository for SqliteStudentRepository<Postgres> {
 
      fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
          let new_greeting = GreetingEntity::from(greeting);
-        let res = sqlx::query_as!(GreetingEntity,"INSERT INTO greeting(\"from\", \"to\", heading, message, created) VALUES ($1, $2, $3, $4, $5)",
-            new_greeting.from,new_greeting.to, new_greeting.heading, new_greeting.message, new_greeting.created)
+        let res = sqlx::query_as!(GreetingEntity,"INSERT INTO greeting(id, \"from\", \"to\", heading, message, created) VALUES ($1, $2, $3, $4, $5, $6)",
+            new_greeting.id, new_greeting.from,new_greeting.to, new_greeting.heading, new_greeting.message, new_greeting.created)
             .fetch_all(&self.pool);
         block_on(res).expect("Failed to store new greeting");
         Ok(())
