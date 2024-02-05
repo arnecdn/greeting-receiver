@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use futures::executor::block_on;
 use sqlx::{Error, migrate, Pool, Postgres};
@@ -96,26 +97,26 @@ impl  SqliteStudentRepository<Postgres> {
         Ok(SqliteStudentRepository{pool})
     }
 }
-
+#[async_trait]
 impl GreetingRepository for SqliteStudentRepository<Postgres> {
-     fn all(&self) -> Result<Vec<Greeting>, ServiceError> {
+    async fn all(&self) -> Result<Vec<Greeting>, ServiceError> {
         let greetings = sqlx::query_as!
             (GreetingEntity, "SELECT id, \"from\", \"to\", heading, message, created FROM greeting ")
-            .fetch_all(&self.pool);
+            .fetch_all(&self.pool).await;
 
-        let r = block_on(greetings);
-         Ok(match r {
+
+         Ok(match greetings {
              Ok(v) => v.iter().map(|v| Greeting::from(v.clone())).collect::<Vec<_>>(),
              Err(_)=> return Err(ServiceError::UnrecognizedGreetingError)
          })
     }
 
-     fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
+    async  fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
          let new_greeting = GreetingEntity::from(greeting);
         let res = sqlx::query_as!(GreetingEntity,"INSERT INTO greeting(id, \"from\", \"to\", heading, message, created) VALUES ($1, $2, $3, $4, $5, $6)",
             new_greeting.id, new_greeting.from,new_greeting.to, new_greeting.heading, new_greeting.message, new_greeting.created)
-            .fetch_all(&self.pool);
-        block_on(res).expect("Failed to store new greeting");
+            .fetch_all(&self.pool).await;
+        // block_on(res).expect("Failed to store new greeting");
         Ok(())
     }
 }

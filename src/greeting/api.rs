@@ -4,6 +4,7 @@ use actix_web::{get, HttpResponse, post, ResponseError, web};
 use actix_web::http::header::ContentType;
 use actix_web::http::StatusCode;
 use actix_web::web::Data;
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use derive_more::{Display, Error};
 use serde::{Deserialize, Serialize};
@@ -28,7 +29,7 @@ pub  async fn  list_greetings(
 ) -> Result<HttpResponse, ApiError> {
 
     if let Ok( read_guard) = data.read(){
-        let greetings = read_guard.all_greetings()?
+        let greetings = read_guard.all_greetings().await?
         .iter().map(|f| GreetingDto::from(f.clone())).collect::<Vec<_>>();
         return Ok(HttpResponse::Ok().json(greetings));
     }
@@ -48,11 +49,10 @@ pub  async fn  list_greetings(
 pub async fn greet(
     data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
     greeting: web::Json<GreetingDto>,
-) -> Result<HttpResponse, ApiError> {
-    greeting.validate()?;
+) -> Result<HttpResponse, ApiError> {greeting.validate()?;
 
     if let Ok(mut guard) = data.write(){
-        guard.receive_greeting(Greeting::from(greeting.0))?;
+        guard.receive_greeting(Greeting::from(greeting.0)).await?;
         return Ok(HttpResponse::Ok().body(""));
     }
 
@@ -212,13 +212,13 @@ mod test {
 }
 #[derive(Clone)]
 struct GreetingSvcStub ;
-
+#[async_trait]
 impl GreetingService for GreetingSvcStub {
 
-    fn receive_greeting(&mut self, _: Greeting) -> Result<(), ServiceError>{
+    async fn receive_greeting(&mut self, _: Greeting) -> Result<(), ServiceError>{
         Ok(())
     }
-    fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError>{
+    async fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError>{
         return Ok(vec![]);
     }
 }
