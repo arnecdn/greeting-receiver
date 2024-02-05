@@ -4,14 +4,14 @@ use actix_web::{get, HttpResponse, post, ResponseError, web};
 use actix_web::http::header::ContentType;
 use actix_web::http::StatusCode;
 use actix_web::web::Data;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use derive_more::{Display, Error};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;
 
-use crate::greeting::api::ApiError::{ApplicationError, BadClientData, Applicationerror};
+use crate::greeting::api::ApiError::{ApplicationError, Applicationerror, BadClientData};
 use crate::greeting::service::{Greeting, GreetingService, ServiceError};
 
 #[utoipa::path(
@@ -25,11 +25,11 @@ use crate::greeting::service::{Greeting, GreetingService, ServiceError};
 #[get("/greeting")]
 pub  async fn  list_greetings(
     data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
-) -> Result<HttpResponse, ApiError>  {
+) -> Result<HttpResponse, ApiError> {
 
     if let Ok( read_guard) = data.read(){
         let greetings = read_guard.all_greetings()?
-            .iter().map(|f|GreetingDto::from(f.clone())).collect::<Vec<_>>();
+        .iter().map(|f| GreetingDto::from(f.clone())).collect::<Vec<_>>();
         return Ok(HttpResponse::Ok().json(greetings));
     }
     Err(Applicationerror)
@@ -49,7 +49,6 @@ pub async fn greet(
     data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
-
     greeting.validate()?;
 
     if let Ok(mut guard) = data.write(){

@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::{env, fs};
 use std::future::Future;
 use std::process::exit;
@@ -7,13 +6,12 @@ use std::sync::RwLock;
 use actix_web::{App, HttpServer};
 use actix_web::web::Data;
 use serde::Deserialize;
-use sqlx::Postgres;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use greeting::{api, service};
 
-use crate::greeting::repository::{RepoError, SqliteStudentRepository};
+use crate::greeting::repository::SqliteStudentRepository;
 use crate::greeting::service::GreetingService;
 
 mod greeting;
@@ -27,20 +25,17 @@ async fn main() -> std::io::Result<()> {
         components(schemas(api::GreetingDto))
     )]
     struct ApiDoc;
-    let server_congig = match fs::read_to_string("./res/server.toml"){
+    let server_congig = match fs::read_to_string("./res/server.toml") {
         Ok(c) => c,
-        Err(_)=>exit(1)
+        Err(_) => exit(1),
     };
 
-    let app_config: AppConfig = match toml::from_str(&server_congig) {
-        Ok(c) => c,
-        Err(e) => {
-            println!("{}", e.message());
-            exit(1)
-        }
-    };
-    // env::set_var("DATABASE_URL", app_config.postgres.database_url);
-    let repo = match SqliteStudentRepository::new(&app_config.postgres.database_url).await{
+    let app_config: AppConfig = toml::from_str(&server_congig).unwrap_or_else(|e| {
+        println!("{}", e.message());
+        exit(1)
+    });
+
+    let repo = match SqliteStudentRepository::new(&app_config.postgres.database_url).await {
         Ok(r) => r,
         Err(e) => {
             println!("{:?}", e);
@@ -53,7 +48,7 @@ async fn main() -> std::io::Result<()> {
         Box::new(service_impl),
     ));
 
-    std::env::set_var("RUST_LOG", "debug");
+    env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
     HttpServer::new(move || {
@@ -73,21 +68,19 @@ async fn main() -> std::io::Result<()> {
 #[derive(Deserialize)]
 struct AppConfig {
     kafka: KafkaConfig,
-    postgres: DbConfig
+    postgres: DbConfig,
 }
 #[derive(Deserialize)]
 struct KafkaConfig {
     broker: String,
     topic: String,
-    message_timeout_ms:i32,
-    enable_idempotence:bool,
-    processing_guarantee:String
-
+    message_timeout_ms: i32,
+    enable_idempotence: bool,
+    processing_guarantee: String,
 }
 #[derive(Deserialize)]
 struct DbConfig {
     user: String,
-    password:String,
-    database_url:String
-
+    password: String,
+    database_url: String,
 }

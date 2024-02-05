@@ -102,6 +102,7 @@ impl GreetingRepository for SqliteStudentRepository<Postgres> {
         let greetings = sqlx::query_as!
             (GreetingEntity, "SELECT id, \"from\", \"to\", heading, message, created FROM greeting ")
             .fetch_all(&self.pool);
+
         let r = block_on(greetings);
          Ok(match r {
              Ok(v) => v.iter().map(|v| Greeting::from(v.clone())).collect::<Vec<_>>(),
@@ -118,32 +119,3 @@ impl GreetingRepository for SqliteStudentRepository<Postgres> {
         Ok(())
     }
 }
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//
-//     #[test]
-//     fn test_greeting_repository() {
-//         let mut repo = GreetingRepositoryInMemory::new(HashMap::new());
-//
-//         // Test storing a greeting
-//         let greeting_entity = GreetingEntity::new(
-//             String::from("John"),
-//             String::from("Mary"),
-//             String::from("Happy Birthday!"),
-//             String::from("Wishing you a wonderful birthday!"),
-//         );
-//
-//         repo.store(Greeting::from(greeting_entity.clone())).unwrap();
-//
-//         // Test retrieving all greetings
-//         let greetings = repo
-//             .all()
-//             .unwrap()
-//             .iter()
-//             .map(|g| GreetingEntity::from(g.clone()))
-//             .collect::<Vec<_>>();
-//         assert_eq!(greetings.len(), 1);
-//         assert_eq!(greetings[0], greeting_entity);
-//     }
-// }
