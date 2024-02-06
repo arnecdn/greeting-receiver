@@ -21,9 +21,17 @@ impl GreetingRepository for SqliteStudentRepository<Postgres> {
 
     async  fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
         let new_greeting = GreetingEntity::from(greeting);
-        sqlx::query_as!(GreetingEntity,"INSERT INTO greeting(id, \"from\", \"to\", heading, message, created) VALUES ($1, $2, $3, $4, $5, $6)",
+        let mut transaction = self.pool.begin().await?;
+
+        sqlx::query!("INSERT INTO greeting(id, \"from\", \"to\", heading, message, created) VALUES ($1, $2, $3, $4, $5, $6)",
             new_greeting.id, new_greeting.from,new_greeting.to, new_greeting.heading, new_greeting.message, new_greeting.created)
-            .fetch_one(&self.pool).await?;
+            .execute(&mut *transaction).await?;
+
+        sqlx::query!("INSERT INTO greeting_logg(greeting_id, created) VALUES ($1, $2)",
+            new_greeting.id, new_greeting.created)
+            .execute(&mut *transaction).await?;
+
+        transaction.commit().await?;
 
         Ok(())
     }
