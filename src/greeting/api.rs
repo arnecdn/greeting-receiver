@@ -49,7 +49,8 @@ pub  async fn  list_greetings(
 pub async fn greet(
     data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
     greeting: web::Json<GreetingDto>,
-) -> Result<HttpResponse, ApiError> {greeting.validate()?;
+) -> Result<HttpResponse, ApiError> {
+    greeting.validate()?;
 
     if let Ok(mut guard) = data.write(){
         guard.receive_greeting(Greeting::from(greeting.0)).await?;
@@ -59,7 +60,7 @@ pub async fn greet(
     Err(Applicationerror)
 }
 
-#[derive(Debug, Display, Error)]
+#[derive(Debug, Display)]
 pub enum ApiError {
     BadClientData(ValidationErrors),
     ApplicationError(ServiceError),

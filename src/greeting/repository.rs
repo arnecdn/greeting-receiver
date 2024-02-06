@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
+use derive_more::{Display, Error};
 use futures::executor::block_on;
 use sqlx::{Error, migrate, Pool, Postgres};
 use sqlx::migrate::MigrateError;
@@ -13,21 +14,17 @@ impl GreetingRepository for SqliteStudentRepository<Postgres> {
     async fn all(&self) -> Result<Vec<Greeting>, ServiceError> {
         let greetings = sqlx::query_as!
         (GreetingEntity, "SELECT id, \"from\", \"to\", heading, message, created FROM greeting ")
-            .fetch_all(&self.pool).await;
+            .fetch_all(&self.pool).await?;
 
-
-        Ok(match greetings {
-            Ok(v) => v.iter().map(|v| Greeting::from(v.clone())).collect::<Vec<_>>(),
-            Err(_)=> return Err(ServiceError::UnrecognizedGreetingError)
-        })
+        Ok(greetings.iter().map(|v| Greeting::from(v.clone())).collect::<Vec<_>>())
     }
 
     async  fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
         let new_greeting = GreetingEntity::from(greeting);
-        let res = sqlx::query_as!(GreetingEntity,"INSERT INTO greeting(id, \"from\", \"to\", heading, message, created) VALUES ($1, $2, $3, $4, $5, $6)",
+        sqlx::query_as!(GreetingEntity,"INSERT INTO greeting(id, \"from\", \"to\", heading, message, created) VALUES ($1, $2, $3, $4, $5, $6)",
             new_greeting.id, new_greeting.from,new_greeting.to, new_greeting.heading, new_greeting.message, new_greeting.created)
-            .fetch_all(&self.pool).await;
-        // block_on(res).expect("Failed to store new greeting");
+            .fetch_one(&self.pool).await?;
+
         Ok(())
     }
 }
@@ -99,7 +96,7 @@ impl GreetingEntity {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Display, Error)]
 pub enum RepoError {
     DbError(Error),
     DbMigrationError(MigrateError)
@@ -107,10 +104,14 @@ pub enum RepoError {
 
 impl From<RepoError> for ServiceError {
     fn from(_error: RepoError) -> Self {
-        ServiceError::UnrecognizedGreetingError
+        ServiceError::RepoError(_error.to_string())
     }
 }
-
+impl From<Error> for ServiceError {
+    fn from(_error: Error) -> Self {
+        ServiceError::RepoError(_error.to_string())
+    }
+}
 impl From<Error> for RepoError{
     fn from(value: Error) -> Self {
         RepoError::DbError(value)
