@@ -1,0 +1,24 @@
+{
+  "name": "greeting-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "plugin.name": "pgoutput",
+    "topic.prefix": "greetings",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "greeting_rust",
+    "database.password": "greeting_rust",
+    "database.dbname": "greeting_rust",
+    "database.server.name": "postgres",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "transforms.changes.type": "io.debezium.transforms.ExtractChangedRecordState",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false",
+    "snapshot.mode": "always",
+    "table.include.list": "public.greeting_logg",
+    "skipped.operations": "u,d,t"
+  }
+}
+

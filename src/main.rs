@@ -5,11 +5,12 @@ use std::sync::RwLock;
 
 use actix_web::{App, HttpServer};
 use actix_web::web::Data;
+use futures::future::{join, join_all};
 use serde::Deserialize;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-use greeting::{api, service};
+use greeting::{api, service, kafka_greeting_consumer};
 
 use crate::greeting::repository::SqliteStudentRepository;
 use crate::greeting::service::GreetingService;
@@ -51,6 +52,10 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
+    let kafka_consumer = kafka_greeting_consumer::consume_and_print("localhost:29092", "greeting_consumers", "greetings.public.greeting_logg");
+
+    actix_web::rt::spawn(async {  kafka_consumer.await});
+
     HttpServer::new(move || {
         App::new()
             .app_data(svc.clone())
@@ -62,8 +67,7 @@ async fn main() -> std::io::Result<()> {
             )
     })
     .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
+    .run().await
 }
 #[derive(Deserialize)]
 struct AppConfig {

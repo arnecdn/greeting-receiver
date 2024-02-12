@@ -95,7 +95,7 @@ impl From<ServiceError> for ApiError {
     }
 }
 
-#[derive(Validate, Serialize, Deserialize, Clone, ToSchema)]
+#[derive(Validate, Serialize, Deserialize, Clone, ToSchema, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct GreetingDto {
     #[validate(length(min = 1, max = 20))]

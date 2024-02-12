@@ -10,6 +10,7 @@ use serde_json;
 use crate::greeting::repository::GreetingEntity;
 
 pub(crate) fn produce(brokers: &str, topic_name: &str, greeting: GreetingEntity) {
+
     let producer: &FutureProducer = &ClientConfig::new()
         .set("bootstrap.servers", brokers)
         .set("message.timeout.ms", "5000")
