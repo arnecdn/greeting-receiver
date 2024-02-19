@@ -5,7 +5,9 @@ use rdkafka::consumer::{CommitMode, Consumer, ConsumerContext, Rebalance, Stream
 use rdkafka::error::KafkaResult;
 use serde::{Deserialize, Serialize};
 
-struct CustomContext;
+struct CustomContext{
+    id: String
+}
 
 impl ClientContext for CustomContext {}
 
@@ -26,8 +28,9 @@ impl ConsumerContext for CustomContext {
 // A type alias with your custom consumer can be created for convenience.
 type LoggingConsumer = StreamConsumer<CustomContext>;
 
-pub(crate) async fn consume_and_print(brokers: &str, group_id: &str, topics: &str) {
-    let context = CustomContext;
+pub(crate) async fn consume_and_print(consumer_id: &str, brokers: &str, group_id: &str, topics: &str) {
+
+    let context = CustomContext{id:String::from(consumer_id) };
 
     let consumer: LoggingConsumer = ClientConfig::new()
         .set("group.id", group_id)
@@ -42,7 +45,8 @@ pub(crate) async fn consume_and_print(brokers: &str, group_id: &str, topics: &st
         .expect("Can't subscribe to specified topics");
 
     info!(
-        "Listening on topic:{:?} on broker: {:?}",
+        "Consumer: {} is listening on topic:{:?} on broker: {:?}",
+        consumer_id,
         &[&topics],
         brokers
     );
@@ -54,7 +58,8 @@ pub(crate) async fn consume_and_print(brokers: &str, group_id: &str, topics: &st
                 let payload: KafkaTopicPayload = serde_json::from_slice(msg.payload().unwrap())
                     .expect("failed to deser JSON to GreetingLogg");
                 info!(
-                    "received key {} with value {:?} in offset {:?} from partition {}",
+                    "Consumer {} received key {} with value {:?} in offset {:?} from partition {} ",
+                    consumer_id,
                     key,
                     payload.after,
                     msg.offset(),

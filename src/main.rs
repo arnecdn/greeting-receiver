@@ -52,9 +52,11 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
-    let kafka_consumer = kafka_greeting_consumer::consume_and_print("localhost:29092", "greeting_consumers", "greetings.public.greeting_logg");
+    let kafka_consumer1 = kafka_greeting_consumer::consume_and_print("consumer_1","localhost:29092", "greeting_consumers", "greetings.public.greeting_logg");
+    let kafka_consumer2 = kafka_greeting_consumer::consume_and_print("consumer_2","localhost:29092", "greeting_consumers", "greetings.public.greeting_logg");
 
-    actix_web::rt::spawn(async {  kafka_consumer.await});
+    actix_web::rt::spawn(async {  kafka_consumer1.await});
+    actix_web::rt::spawn(async {  kafka_consumer2.await});
 
     HttpServer::new(move || {
         App::new()
