@@ -52,8 +52,10 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
-    let kafka_consumer1 = kafka_greeting_consumer::consume_and_print("consumer_1","localhost:29092", "greeting_consumers", "greetings.public.greeting_logg");
-    let kafka_consumer2 = kafka_greeting_consumer::consume_and_print("consumer_2","localhost:29092", "greeting_consumers", "greetings.public.greeting_logg");
+    let kafka_consumer1 = kafka_greeting_consumer::consume_and_print(String::from("consumer_1"),app_config.kafka.broker.clone(),
+                                                                     app_config.kafka.consumer_group.clone(), app_config.kafka.topic.clone());
+    let kafka_consumer2 = kafka_greeting_consumer::consume_and_print(String::from("consumer_2"),app_config.kafka.broker.clone(),
+                                                                     app_config.kafka.consumer_group.clone(), app_config.kafka.topic.clone());
 
     actix_web::rt::spawn(async {  kafka_consumer1.await});
     actix_web::rt::spawn(async {  kafka_consumer2.await});
@@ -80,6 +82,7 @@ struct AppConfig {
 struct KafkaConfig {
     broker: String,
     topic: String,
+    consumer_group: String,
     message_timeout_ms: i32,
     enable_idempotence: bool,
     processing_guarantee: String,

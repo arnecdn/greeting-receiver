@@ -28,13 +28,13 @@ impl ConsumerContext for CustomContext {
 // A type alias with your custom consumer can be created for convenience.
 type LoggingConsumer = StreamConsumer<CustomContext>;
 
-pub(crate) async fn consume_and_print(consumer_id: &str, brokers: &str, group_id: &str, topics: &str) {
+pub(crate) async fn consume_and_print(consumer_id: String, brokers: String, group_id: String, topics: String) {
 
-    let context = CustomContext{id:String::from(consumer_id) };
+    let context = CustomContext{id:String::from(&consumer_id) };
 
     let consumer: LoggingConsumer = ClientConfig::new()
         .set("group.id", group_id)
-        .set("bootstrap.servers", brokers)
+        .set("bootstrap.servers", &brokers)
          .set("enable.auto.commit", "false")
         .set_log_level(RDKafkaLogLevel::Debug)
         .create_with_context(context)
@@ -46,9 +46,9 @@ pub(crate) async fn consume_and_print(consumer_id: &str, brokers: &str, group_id
 
     info!(
         "Consumer: {} is listening on topic:{:?} on broker: {:?}",
-        consumer_id,
+        &consumer_id,
         &[&topics],
-        brokers
+        &brokers
     );
     loop {
         match consumer.recv().await {
@@ -59,7 +59,7 @@ pub(crate) async fn consume_and_print(consumer_id: &str, brokers: &str, group_id
                     .expect("failed to deser JSON to GreetingLogg");
                 info!(
                     "Consumer {} received key {} with value {:?} in offset {:?} from partition {} ",
-                    consumer_id,
+                    &consumer_id,
                     key,
                     payload.after,
                     msg.offset(),
