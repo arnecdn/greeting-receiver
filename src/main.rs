@@ -52,13 +52,14 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
-    let kafka_consumer1 = kafka_greeting_consumer::consume_and_print(String::from("consumer_1"),app_config.kafka.broker.clone(),
-                                                                     app_config.kafka.consumer_group.clone(), app_config.kafka.topic.clone());
-    let kafka_consumer2 = kafka_greeting_consumer::consume_and_print(String::from("consumer_2"),app_config.kafka.broker.clone(),
-                                                                     app_config.kafka.consumer_group.clone(), app_config.kafka.topic.clone());
+    for i in 0..app_config.kafka_consumer.number_of_consumers{
+        let kafka_consumer = kafka_greeting_consumer::consume_and_print(String::from("consumer_" ) + &*i.to_string(),
+                                                                        app_config.kafka_consumer.broker.clone(),
+                                                                        app_config.kafka_consumer.consumer_group.clone(),
+                                                                        app_config.kafka_consumer.topic.clone());
 
-    actix_web::rt::spawn(async {  kafka_consumer1.await});
-    actix_web::rt::spawn(async {  kafka_consumer2.await});
+        actix_web::rt::spawn(async {  kafka_consumer.await});
+    }
 
     HttpServer::new(move || {
         App::new()
@@ -75,7 +76,7 @@ async fn main() -> std::io::Result<()> {
 }
 #[derive(Deserialize)]
 struct AppConfig {
-    kafka: KafkaConfig,
+    kafka_consumer: KafkaConfig,
     postgres: DbConfig,
 }
 #[derive(Deserialize)]
@@ -86,6 +87,7 @@ struct KafkaConfig {
     message_timeout_ms: i32,
     enable_idempotence: bool,
     processing_guarantee: String,
+    number_of_consumers:i32
 }
 #[derive(Deserialize)]
 struct DbConfig {
