@@ -19,6 +19,7 @@
     "snapshot.mode": "always",
     "table.include.list": "public.greeting_logg",
     "skipped.operations": "u,d,t"
+
   }
 }
 

@@ -41,6 +41,13 @@ services:
             CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
             CONNECT_REST_ADVERTISED_HOST_NAME: "localhost"
         #            CONNECT_PLUGIN_PATH: "/usr/share/java confluentinc/cp-kafka-connect:7.6.0"
+#            CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+        command:
+            - bash
+            - -c
+            - |
+                confluent-hub install --no-prompt debezium/debezium-connector-postgresql:2.2.1
+                /etc/confluent/docker/run
         depends_on:
             - zookeeper
             - kafka

@@ -1,6 +1,6 @@
 [kafka_consumer]
 broker = "localhost:29092"
-topic = "greeting"
+topic = "greetings.public.greeting_logg"
 consumer_group = "greeting_consumers"
 message_timeout_ms = 5000
 enable_idempotence = true

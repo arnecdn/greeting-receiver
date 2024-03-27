@@ -65,7 +65,7 @@ pub(crate) async fn consume_and_print(consumer_id: String, brokers: String, grou
                     msg.offset(),
                     msg.partition()
                 );
-                consumer.commit_message(&msg, CommitMode::Async).unwrap();
+                consumer.commit_message(&msg, CommitMode::Sync).unwrap();
             }
         }
     }
