@@ -22,7 +22,13 @@ curl -i -X DELETE localhost:8083/connectors/greeting-connector
 
 
 Minikube
-configure zookeper for minikube 
+configure zookeper for minikube based on article:https://gsfl3101.medium.com/kafka-raft-kraft-cluster-configuration-from-dev-to-prod-part-1-8a844fabf804
 ```
 kubectl apply -f kubernetes/kafka-zookeeper.yaml
+kubectl apply -f kubernetes/kafka.yaml
+
+kubectl delete -n default deployment kafka-deployment
+kubectl delete -n default service kafka-service
 ```
+
+
