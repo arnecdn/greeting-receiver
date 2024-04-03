@@ -27,7 +27,8 @@ configure zookeper for minikube based on article:https://gsfl3101.medium.com/kaf
 kubectl apply -f kubernetes/kafka-zookeeper.yaml
 kubectl apply -f kubernetes/kafka.yaml
 
-kubectl delete -n default deployment kafka-deployment
+kubectl delete -n default deployment kafka-deployment-1
+kubectl delete -n default deployment kafka-deployment-2
 kubectl delete -n default service kafka-service
 ```
 
