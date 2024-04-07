@@ -12,7 +12,7 @@ use utoipa_swagger_ui::SwaggerUi;
 
 use greeting::{api, service, kafka_greeting_consumer};
 
-use crate::greeting::repository::SqliteStudentRepository;
+use crate::greeting::repository::SqliteGreetingRepository;
 use crate::greeting::service::GreetingService;
 
 mod greeting;
@@ -36,7 +36,7 @@ async fn main() -> std::io::Result<()> {
         exit(1)
     });
 
-    let repo = match SqliteStudentRepository::new(&app_config.postgres.database_url).await {
+    let repo = match SqliteGreetingRepository::new(&app_config.postgres.database_url).await {
         Ok(r) => r,
         Err(e) => {
             println!("{:?}", e);

@@ -32,4 +32,22 @@ kubectl delete -n default deployment kafka-deployment-2
 kubectl delete -n default service kafka-service
 ```
 
+# Building docker image
 
+Troubleshooting building docker image
+1) Update rust version: 
+```
+rustup update
+```
+2) 
+Having some trouble building docker file generated from 
+```
+docker init
+```
+Seems to be related to cross compilation of librc
+Added to the "# Install host build dependencies."  
+```
+#RUN apk add --no-cache clang lld musl-dev git librdkafka-dev g++ make
+```
+
+Apparntly 

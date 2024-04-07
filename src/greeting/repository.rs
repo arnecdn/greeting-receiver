@@ -10,7 +10,7 @@ use uuid::Uuid;
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
 
 #[async_trait]
-impl GreetingRepository for SqliteStudentRepository<Postgres> {
+impl GreetingRepository for SqliteGreetingRepository<Postgres> {
     async fn all(&self) -> Result<Vec<Greeting>, ServiceError> {
         let greetings = sqlx::query_as!
         (GreetingEntity, "SELECT id, \"from\", \"to\", heading, message, created FROM greeting ")
@@ -19,7 +19,7 @@ impl GreetingRepository for SqliteStudentRepository<Postgres> {
         Ok(greetings.iter().map(|v| Greeting::from(v.clone())).collect::<Vec<_>>())
     }
 
-    async  fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
+    async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
         let new_greeting = GreetingEntity::from(greeting);
         let mut transaction = self.pool.begin().await?;
 
@@ -38,11 +38,11 @@ impl GreetingRepository for SqliteStudentRepository<Postgres> {
 }
 
 
-pub struct SqliteStudentRepository<T: sqlx::Database> {
+pub struct SqliteGreetingRepository<T: sqlx::Database> {
     pool: Pool<T>,
 }
 
-impl  SqliteStudentRepository<Postgres> {
+impl  SqliteGreetingRepository<Postgres> {
     pub async fn new(database_url: &str) -> Result<Self, RepoError> {
 
         let pool = PgPoolOptions::new()
@@ -50,7 +50,7 @@ impl  SqliteStudentRepository<Postgres> {
             .connect(database_url).await?;
         migrate!("./migrations")
             .run(&pool).await?;
-        Ok(SqliteStudentRepository{pool})
+        Ok(SqliteGreetingRepository {pool})
     }
 }
 
