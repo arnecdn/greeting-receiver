@@ -6,18 +6,23 @@
 
 # Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
 
-ARG RUST_VERSION=1.77.1
+ARG RUST_VERSION=1.77-bullseye
+#ARG RUST_VERSION=latest
 ARG APP_NAME=greetings_rust
 
 ################################################################################
 # Create a stage for building the application.
 
-FROM rust:${RUST_VERSION}-alpine AS build
+FROM rust:${RUST_VERSION} AS build
 ARG APP_NAME
 WORKDIR /app
 
+
 # Install host build dependencies.
-RUN apk add --no-cache clang lld musl-dev git
+#RUN apk add --no-cache clang lld musl-dev git cmake g++ make
+RUN apt-get update && apt-get install -y cmake
+ENV SQLX_OFFLINE true
+
 
 # Build the application.
 # Leverage a cache mount to /usr/local/cargo/registry/
@@ -28,13 +33,23 @@ RUN apk add --no-cache clang lld musl-dev git
 # source code into the container. Once built, copy the executable to an
 # output directory before the cache mounted /app/target is unmounted.
 RUN --mount=type=bind,source=src,target=src \
+    --mount=type=bind,source=migrations,target=migrations \
+    --mount=type=bind,source=res,target=res \
+    --mount=type=bind,source=.sqlx,target=.sqlx \
+#    --mount=type=bind,source=.cargo/config.toml,target=.cargo/config.toml \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
     --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
     --mount=type=cache,target=/app/target/ \
     --mount=type=cache,target=/usr/local/cargo/git/db \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
-cargo build --locked --release && \
-cp ./target/release/$APP_NAME /bin/server
+    cargo build --locked --release && \
+    cp ./target/release/$APP_NAME /usr/bin/server && \
+    mkdir -p /usr/bin/migrations && \
+    mkdir -p /usr/bin/res && \
+    mkdir -p /usr/bin/.sqlx && \
+    cp ./migrations/* /usr/bin/migrations && \
+    cp ./res/* /usr/bin/res && \
+    cp ./.sqlx/* /usr/bin/.sqlx
 
 ################################################################################
 # Create a new stage for running the application that contains the minimal
@@ -46,7 +61,12 @@ cp ./target/release/$APP_NAME /bin/server
 # By specifying the "3.18" tag, it will use version 3.18 of alpine. If
 # reproducability is important, consider using a digest
 # (e.g., alpine@sha256:664888ac9cfd28068e062c991ebcff4b4c7307dc8dd4df9e728bedde5c449d91).
-FROM alpine:3.18 AS final
+FROM rust:${RUST_VERSION} AS final
+RUN apt-get update && apt-get install -y cmake strace
+
+RUN mkdir -p /usr/bin/migrations && \
+    mkdir -p /usr/bin/res && \
+    mkdir -p /usr/bin/.sql
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/go/dockerfile-user-best-practices/
@@ -62,10 +82,19 @@ RUN adduser \
 USER appuser
 
 # Copy the executable from the "build" stage.
-COPY --from=build /bin/server /bin/
 
+COPY --chown=appuser:appuser --from=build /usr/bin/server /usr/bin
+COPY --chown=appuser:appuser --from=build /usr/bin/migrations /usr/bin/migrations
+COPY --chown=appuser:appuser --from=build /usr/bin/res /usr/bin/res
+COPY --chown=appuser:appuser --from=build /usr/bin/.sqlx /usr/bin/.sqlx
+
+
+#RUN chmod -R 755 /bin/server
 # Expose the port that the application listens on.
 EXPOSE 8080
 
 # What the container should run when it is started.
-CMD ["/bin/server"]
+#WORKDIR "/bin/"
+#ENTRYPOINT ["/usr/bin/server"]
+ENTRYPOINT ["tail"]
+CMD ["-f","/dev/null"]

@@ -30,6 +30,7 @@ async fn main() -> std::io::Result<()> {
         Ok(c) => c,
         Err(_) => exit(1),
     };
+    println!("Starting server");
 
     let app_config: AppConfig = toml::from_str(&server_congig).unwrap_or_else(|e| {
         println!("{}", e.message());

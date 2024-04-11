@@ -1,4 +1,4 @@
-# greeting_rust
+# Greeting app in Rust
 This is a simple sample app implementing a service for receiving greetings and storing them in a database. 
 It furthers distributes greetings via Kafka topic with Debezium
 
@@ -10,6 +10,8 @@ cargo build
 The component is a sample app in RUST for creating a service for receiving greetings
 It implements an API for receiving and listing greetings. 
 The service publishes events from new greetings downstream for consumers. 
+
+Setting up kafka and debezium on Docker. 
 
 #activat debezium connector 
 ```
@@ -33,21 +35,39 @@ kubectl delete -n default service kafka-service
 ```
 
 # Building docker image
+In order to build a dockerimage, the following init was done. 
+```
+docker init
+docker-compose up --build
+```
 
-Troubleshooting building docker image
-1) Update rust version: 
+The basic setup didn't build correctly due to cross compilation from macos to alpine
+
+The following sections steps through problems and solutions  
+## Updating versions, due to errors bulding
+After troubleshooting building docker image, 
+Update rust version: 
 ```
 rustup update
 ```
-2) 
-Having some trouble building docker file generated from 
-```
-docker init
-```
-Seems to be related to cross compilation of librc
+## Cross compiliation of rdkafka dependencies 
+Building the docker image failed with some errors refering to cross compliation of
+rdkafka-sys dependencies. 
+
 Added to the "# Install host build dependencies."  
 ```
 #RUN apk add --no-cache clang lld musl-dev git librdkafka-dev g++ make
 ```
 
-Apparntly 
+## Building app with SQLX 
+In order to build application with sqlx, the macros used in code need to validate SQL
+Tryding to use the updated query-cache from development
+Set 
+```
+ENV SQLX_OFFLINE true
+```
+Mount generated sqlx cache to build 
+```
+--mount=type=bind,source=.sqlx,target=.sqlx \
+```
+
