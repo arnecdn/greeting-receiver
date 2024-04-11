@@ -71,3 +71,9 @@ Mount generated sqlx cache to build
 --mount=type=bind,source=.sqlx,target=.sqlx \
 ```
 
+After some work making Dockerfile build a successfull image, the container refused to run. 
+In order to investiage, I installed the utility strace in order to trace the linux environment
+for clues. 
+By reading output, it was pretty easy to relate errors to missing files and external resources not accessible. 
+
+

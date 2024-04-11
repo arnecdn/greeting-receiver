@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: postgres-greeting
+    name: greeting-rust
 spec:
     selector:
         matchLabels:
-            app: postgres-greeting
+            app: greeting-rust
     template:
         metadata:
             labels:
-                app: postgres-greeting
+                app: greeting-rust
         spec:
             containers:
-                -   name: postgres-greeting
-                    image: postgres:latest
+                -   name: greeting-rust
+                    image: greetings_rust-server:latest
                     ports:
-                        -   containerPort: 5432
+                        -   containerPort: 8080
                     env:
                         -   name: POSTGRES_DB
                             valueFrom:
@@ -36,29 +36,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-    name: postgres-greeting
+    name: greeting-rust
 spec:
     ports:
-        - port: 5432
+        - port: 8080
     selector:
-        app: postgres-greeting
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-    name: postgres-greeting-config
-    labels:
-        app: postgres-greeting
-data:
-    POSTGRES_DB: "greeting_rust"
-    POSTGRES_USER: "greeting_rust"
-    POSTGRES_HOST: "greeting_rust"
----
-apiVersion: v1
-kind: Secret
-metadata:
-    name: postgres-greeting-secret
-    labels:
-        app: postgres-greeting
-data:
-    POSTGRES_PASSWORD: Z3JlZXRpbmdfcnVzdAo=
+        app: greeting-rust
