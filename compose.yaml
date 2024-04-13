@@ -12,6 +12,7 @@ services:
     build:
       context: .
       target: final
+    image: arnecdn/greeting-rust
     ports:
       - 8080:8080
 
