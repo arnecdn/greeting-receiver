@@ -12,8 +12,6 @@ name: Publish Docker Greeting Rust image
 on:
   release:
     types: [published]
-  push:
-    branches: [ "main" ]
 
   
 jobs:
