@@ -36,8 +36,10 @@ async fn main() -> std::io::Result<()> {
         println!("{}", e.message());
         exit(1)
     });
+    // let db_config = DbConfig::init();
 
-    let repo = match SqliteGreetingRepository::new(&app_config.postgres.database_url).await {
+    let database_url = env!("DATABASE_URL");
+    let repo = match SqliteGreetingRepository::new(&database_url).await {
         Ok(r) => r,
         Err(e) => {
             println!("{:?}", e);
@@ -78,7 +80,6 @@ async fn main() -> std::io::Result<()> {
 #[derive(Deserialize)]
 struct AppConfig {
     kafka_consumer: KafkaConfig,
-    postgres: DbConfig,
 }
 #[derive(Deserialize)]
 struct KafkaConfig {
@@ -94,5 +95,17 @@ struct KafkaConfig {
 struct DbConfig {
     user: String,
     password: String,
-    database_url: String,
+    database_host: String,
+    database: String
+}
+
+impl DbConfig {
+    fn init()-> Self{
+        DbConfig{
+            user:env!("POSTGRES_USER").to_string(),
+            password: env!("POSTGRES_PASSWORD").to_string(),
+            database_host: env!("POSTGRES_HOST").to_string(),
+            database: env!("POSTGRES_DATABASE").to_string(),
+        }
+    }
 }
