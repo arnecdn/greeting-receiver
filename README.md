@@ -77,16 +77,10 @@ for clues.
 By reading output, it was pretty easy to relate errors to missing files and external resources not accessible. 
 
 
-# Deploying image to minikube
-In order to deploy an locally built image from local docker registry follow steps for macos:
-https://minikube.sigs.k8s.io/docs/handbook/registry/
-Run
+# Deploying image to minikube from local development
+In order to deploy a locally built image from local docker registry follow steps for macos:
+
 ```
-minikube addons enable registry
-```
-```
-docker run --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(minikube ip):5000"
-```
-```
-docker push localhost:5000/myimage
+docker image save -o image.tar <my_image:tag>
+minikube image load image.tar
 ```

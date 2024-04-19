@@ -14,6 +14,8 @@ spec:
             containers:
                 -   name: greeting-rust
                     image: arnecdn/greeting-rust:latest
+                    imagePullPolicy: Always
+
                     ports:
                         -   containerPort: 8080
                     env:
