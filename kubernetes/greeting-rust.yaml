@@ -13,8 +13,8 @@ spec:
         spec:
             containers:
                 -   name: greeting-rust
-                    image: arnecdn/greeting-rust:0.4
-                    imagePullPolicy: Always
+                    image: arnecdn/greeting-rust:0.8
+                    imagePullPolicy: IfNotPresent
 
                     ports:
                         -   containerPort: 8080

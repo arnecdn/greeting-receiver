@@ -23,11 +23,11 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y cmake
 ENV SQLX_OFFLINE true
 
-ENV DATABASE_URL=postgres://
-ENV POSTGRES_HOST=posgres
-ENV POSTGRES_USER=posgres
-ENV POSTGRES_PASSWORD=posgres
-ENV POSTGRES_DATABASE=posgres
+ENV DATABASE_URL=""
+ENV POSTGRES_HOST=""
+ENV POSTGRES_USER=""
+ENV POSTGRES_PASSWORD=""
+ENV POSTGRES_DATABASE=""
 # Build the application.
 # Leverage a cache mount to /usr/local/cargo/registry/
 # for downloaded dependencies, a cache mount to /usr/local/cargo/git/db
