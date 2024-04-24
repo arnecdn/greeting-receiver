@@ -81,9 +81,9 @@ By reading output, it was pretty easy to relate errors to missing files and exte
 In order to deploy a locally built image from local docker registry follow steps for macos:
 
 ```
-docker build -t arnecdn/greeting-rust:<tag<> . 
+docker build -t arnecdn/greeting-rust:<tag> . 
 mkdir .docker && docker image save -o greeting-rust.tar arnecdn/greeting-rust:<tag>
-minikube image load ./docker/greeting-rust.tar
+minikube image load .docker/greeting-rust.tar
 ```
 From minikube: https://minikube.sigs.k8s.io/docs/handbook/pushing/
 ```
