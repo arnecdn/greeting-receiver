@@ -15,7 +15,24 @@ services:
     image: arnecdn/greeting-rust
     ports:
       - 8080:8080
-
+  postgres:
+    image: postgres:13
+    restart: always
+    environment:
+        POSTGRES_DB: greeting_rust
+        POSTGRES_USER: greeting_rust
+        POSTGRES_PASSWORD: greeting_rust
+    ports:
+        - "5432:5432"
+    volumes:
+        - db:/var/lib/postgresql/data
+    command:
+        - "postgres"
+        - "-c"
+        - "wal_level=logical"
+volumes:
+    data1-1:
+    db: { }
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
 # start the database before your application. The `db-data` volume persists the

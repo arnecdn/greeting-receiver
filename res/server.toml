@@ -7,8 +7,4 @@ enable_idempotence = true
 processing_guarantee = "exactly_once"
 number_of_consumers = 10
 [database]
-url = "postgres://test:test@test:5432/test"
-host = "test:5432"
-database = "test"
-user = "test"
-password = "test"
+url = "postgres://greeting_rust:greeting_rust@localhost:5432/greeting_rust"

@@ -1,24 +1,23 @@
 use std::{env, fs};
-use std::collections::HashMap;
 use std::future::Future;
 use std::process::exit;
 use std::sync::RwLock;
 
 use actix_web::{App, HttpServer};
+
 use actix_web::web::Data;
-use config::{Config, ConfigError};
-use dotenv::dotenv;
-use futures::future::{join, join_all};
 use serde::Deserialize;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use greeting::{api, service, kafka_greeting_consumer};
+use settings::GreetingsAppConfig;
 
 use crate::greeting::repository::SqliteGreetingRepository;
 use crate::greeting::service::GreetingService;
 
 mod greeting;
+mod settings;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -29,20 +28,11 @@ async fn main() -> std::io::Result<()> {
         components(schemas(api::GreetingDto))
     )]
     struct ApiDoc;
-    let server_congig = match fs::read_to_string("./res/server.toml") {
-        Ok(c) => c,
-        Err(_) => exit(1),
-    };
-    println!("Starting server");
-    AppConfig::new();
-    let app_config: AppConfig = toml::from_str(&server_congig).unwrap_or_else(|e| {
-        println!("{}", e.message());
-        exit(1)
-    });
-    // let db_config = DbConfig::init();
 
-    // let database_url = env!("DATABASE_URL");
-    let repo = match SqliteGreetingRepository::new(&app_config.database.database).await {
+    println!("Starting server");
+    let app_config = GreetingsAppConfig::new();
+
+    let repo = match SqliteGreetingRepository::new(&app_config.database.url).await {
         Ok(r) => r,
         Err(e) => {
             println!("{:?}", e);
@@ -80,62 +70,4 @@ async fn main() -> std::io::Result<()> {
     .bind(("127.0.0.1", 8080))?
     .run().await
 }
-#[derive(Deserialize)]
-struct AppConfig {
-    kafka_consumer: KafkaConfig,
-    database: Database
-}
 
-impl AppConfig {
-    pub fn new()  {
-        dotenv().ok();
-        let env = env::var("environment").unwrap_or("development".into());
-
-        let settings = Config::builder()
-            // Add in `./Settings.toml`
-            .add_source(config::File::with_name("./res/server").required(false))
-            .add_source(config::Environment::with_prefix("APP").separator("_"))
-            // Add in settings from the environment (with a prefix of APP)
-            // Eg.. `APP_DEBUG=1 ./target/app` would set the `debug` key
-            .build()
-            .unwrap();
-
-        let app_config:AppConfig = settings.try_deserialize().unwrap();
-        println!("{:?}",app_config.database.url);
-        // println!(
-        //     "{:?}",
-        //     settings.get::<String>("kafka_consumer.broker")
-        //         .unwrap()
-        // );
-    }
-}
-#[derive(Deserialize)]
-struct KafkaConfig {
-    broker: String,
-    topic: String,
-    consumer_group: String,
-    message_timeout_ms: i32,
-    enable_idempotence: bool,
-    processing_guarantee: String,
-    number_of_consumers:i32
-}
-#[derive(Deserialize)]
-struct Database {
-    url: String,
-    user: String,
-    password: String,
-    host: String,
-    database: String
-}
-//
-// impl DbConfig {
-//     fn init()-> Self{
-//         DbConfig{
-//             user:env!("POSTGRES_USER").to_string(),
-//             password: env!("POSTGRES_PASSWORD").to_string(),
-//             database_host: env!("POSTGRES_HOST").to_string(),
-//             database: env!("POSTGRES_DATABASE").to_string(),
-//         }
-//     }
-//
-// }
