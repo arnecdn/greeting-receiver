@@ -48,11 +48,11 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
-    for i in 0..app_config.kafka_consumer.number_of_consumers{
+    for i in 0..app_config.kafka.number_of_consumers{
         let kafka_consumer = kafka_greeting_consumer::consume_and_print(String::from("consumer_" ) + &*i.to_string(),
-                                                                        app_config.kafka_consumer.broker.clone(),
-                                                                        app_config.kafka_consumer.consumer_group.clone(),
-                                                                        app_config.kafka_consumer.topic.clone());
+                                                                        app_config.kafka.broker.clone(),
+                                                                        app_config.kafka.consumer_group.clone(),
+                                                                        app_config.kafka.topic.clone());
 
         actix_web::rt::spawn(async {  kafka_consumer.await});
     }

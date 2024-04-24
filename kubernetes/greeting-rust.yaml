@@ -13,7 +13,7 @@ spec:
         spec:
             containers:
                 -   name: greeting-rust
-                    image: arnecdn/greeting-rust:0.11
+                    image: arnecdn/greeting-rust:0.12
                     imagePullPolicy: IfNotPresent
 
                     ports:
@@ -36,6 +36,21 @@ spec:
                                     name: postgres-greeting-secret
                         - name: APP_DATABASE_URL
                           value: "postgres://$(APP_DATABASE_USER):$(APP_DATABASE_PASSWORD)@postgres-greeting:5432/$(APP_DATABASE_DATABASE)"
+                        - name: APP_KAFKA_BROKER
+                          value: "kafka-service:29092"
+                        - name: APP_KAFKA_TOPIC
+                          value: "greetings.public.greeting_logg"
+                        - name: APP_KAFKA_CONSUMER_GROUP
+                          value: "greeting_consumers"
+                        - name: APP_KAFKA_MESSAGE_TIMEOUT_MS
+                          value: "5000"
+                        - name: APP_KAFKA_ENABLE_IDEMPOTENCE
+                          value: "true"
+                        - name: APP_KAFKA_PROCESSING_GUARANTEE
+                          value: "exactly_once"
+                        - name: APP_KAFKA_NUMBER_OF_CONSUMERS
+                          value: "1"
+
 
 ---
 apiVersion: v1

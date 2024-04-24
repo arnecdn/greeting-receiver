@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub (crate) struct GreetingsAppConfig {
-    pub (crate) kafka_consumer: KafkaConfig,
+    pub (crate) kafka: KafkaConfig,
     pub (crate) database: Database
 }
 
