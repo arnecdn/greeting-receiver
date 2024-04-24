@@ -19,23 +19,24 @@ spec:
                     ports:
                         -   containerPort: 8080
                     env:
-                        - name: DATABASE_URL
-                          value: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-greeting:5432/${POSTGRES_DB}"
-                        -   name: POSTGRES_DB
+                        -   name: APP_DATABASE_DATABASE
                             valueFrom:
                                 configMapKeyRef:
                                     key: POSTGRES_DB
                                     name: postgres-greeting-config
-                        -   name: POSTGRES_USER
+                        -   name: APP_DATABASE_USER
                             valueFrom:
                                 configMapKeyRef:
                                     key: POSTGRES_USER
                                     name: postgres-greeting-config
-                        -   name: POSTGRES_PASSWORD
+                        -   name: APP_DATABASE_PASSWORD
                             valueFrom:
                                 secretKeyRef:
                                     key: POSTGRES_PASSWORD
                                     name: postgres-greeting-secret
+                        - name: APP_DATABASE_URL
+                          value: "postgres://$(APP_DATABASE_USER):$(APP_DATABASE_PASSWORD)@postgres-greeting:5432/$(APP_DATABASE_DATABASE)"
+
 ---
 apiVersion: v1
 kind: Service
