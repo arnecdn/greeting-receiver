@@ -3,9 +3,9 @@ use dotenv::dotenv;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub struct GreetingsAppConfig {
-    pub kafka_consumer: KafkaConfig,
-    pub database: Database
+pub (crate) struct GreetingsAppConfig {
+    pub (crate) kafka_consumer: KafkaConfig,
+    pub (crate) database: Database
 }
 
 impl GreetingsAppConfig {
@@ -26,19 +26,15 @@ impl GreetingsAppConfig {
 }
 #[derive(Deserialize)]
 pub (crate) struct KafkaConfig {
-    pub broker: String,
-    pub topic: String,
-    pub consumer_group: String,
-    pub message_timeout_ms: i32,
-    pub enable_idempotence: bool,
-    pub processing_guarantee: String,
-    pub number_of_consumers:i32
+    pub (crate) broker: String,
+    pub (crate) topic: String,
+    pub (crate) consumer_group: String,
+    pub (crate) message_timeout_ms: i32,
+    pub (crate) enable_idempotence: bool,
+    pub (crate) processing_guarantee: String,
+    pub (crate) number_of_consumers:i32
 }
 #[derive(Deserialize)]
 pub (crate) struct Database {
     pub(crate) url: String,
-    // user: String,
-    // password: String,
-    // host: String,
-    // database: String
 }
