@@ -50,6 +50,10 @@ spec:
                           value: "exactly_once"
                         - name: APP_KAFKA_NUMBER_OF_CONSUMERS
                           value: "1"
+                    command:
+                              - "postgres"
+                              - "-c"
+                              - "wal_level=logical"
 
 
 ---
