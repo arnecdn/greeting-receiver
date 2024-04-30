@@ -59,10 +59,10 @@ spec:
                         value: "org.apache.kafka.connect.json.JsonConverter"
                       - name: CONNECT_REST_ADVERTISED_HOST_NAME
                         value: "localhost"
-                 command:
-                     - bash
-                     - -c
-                     - confluent-hub install --no-prompt debezium/debezium-connector-postgresql:2.2.1
+#                 command:
+#                     - bash
+#                     - -c
+#                     - confluent-hub install --no-prompt debezium/debezium-connector-postgresql:2.2.1
 #                     - /etc/confluent/docker/run
 
                  ports:

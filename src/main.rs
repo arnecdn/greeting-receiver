@@ -11,7 +11,7 @@ use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use greeting::{api, service, kafka_greeting_consumer};
-use settings::GreetingsAppConfig;
+use settings::Settings;
 
 use crate::greeting::repository::SqliteGreetingRepository;
 use crate::greeting::service::GreetingService;
@@ -30,7 +30,7 @@ async fn main() -> std::io::Result<()> {
     struct ApiDoc;
 
     println!("Starting server");
-    let app_config = GreetingsAppConfig::new();
+    let app_config = Settings::new();
 
     let repo = match SqliteGreetingRepository::new(&app_config.database.url).await {
         Ok(r) => r,

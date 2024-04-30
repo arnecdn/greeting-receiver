@@ -32,6 +32,10 @@ spec:
                                 secretKeyRef:
                                     key: POSTGRES_PASSWORD
                                     name: postgres-greeting-secret
+#                    command:
+#                      - "postgres"
+#                      - "-c"
+#                      - "wal_level=logical"
 ---
 apiVersion: v1
 kind: Service

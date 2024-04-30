@@ -2,10 +2,9 @@ apiVersion: v1
 kind: Service
 metadata:
     labels:
-        app: kafka1
+        app: kafka
     name: kafka-service
 spec:
-    type: NodePort
     ports:
         - name: kafka-port1
           port: 9092
@@ -16,25 +15,23 @@ spec:
           protocol: TCP
           targetPort: 29092
     selector:
-        app: kafka1
-#    clusterIP: None
-#    type: ClusterIP
+        app: kafka
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
     labels:
-        app: kafka1
-    name: kafka-deployment
+        app: kafka
+    name: kafka
 spec:
     replicas: 1
     selector:
         matchLabels:
-            app: kafka1
+            app: kafka
     template:
         metadata:
             labels:
-                app: kafka1
+                app: kafka
         spec:
             containers:
                 - env:
@@ -73,5 +70,7 @@ spec:
                   name: kafka-broker-1
                   ports:
                       - containerPort: 29092
+                        name: kafka-port2
                       - containerPort: 9092
+                        name: kafka-port1
 #                      - containerPort: 30126

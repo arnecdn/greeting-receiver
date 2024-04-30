@@ -3,12 +3,12 @@ use dotenv::dotenv;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub (crate) struct GreetingsAppConfig {
-    pub (crate) kafka: KafkaConfig,
+pub (crate) struct Settings {
+    pub (crate) kafka: Kafka,
     pub (crate) database: Database
 }
 
-impl GreetingsAppConfig {
+impl Settings {
     pub fn new() -> Self {
 
         dotenv().ok();
@@ -16,7 +16,7 @@ impl GreetingsAppConfig {
 
         let settings = Config::builder()
             .add_source(config::File::with_name("./res/server").required(false))
-            .add_source(config::Environment::with_prefix("APP").separator("_"))
+            .add_source(config::Environment::with_prefix("APP").separator("__"))
             .build()
             .unwrap();
 
@@ -25,7 +25,7 @@ impl GreetingsAppConfig {
     }
 }
 #[derive(Deserialize)]
-pub (crate) struct KafkaConfig {
+pub (crate) struct Kafka {
     pub (crate) broker: String,
     pub (crate) topic: String,
     pub (crate) consumer_group: String,
