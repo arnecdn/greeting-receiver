@@ -42,7 +42,7 @@ spec:
                       - name: KAFKA_CONTROLLER_LISTENER_NAMES
                         value: "CONTROLLER"
                       - name: KAFKA_LISTENERS
-                        value: "CONTROLLER://localhost:29092,PLAINTEXT://localhost:9092"
+                        value: "CONTROLLER://0.0.0.0:29092,PLAINTEXT://0.0.0.0:9092"
                       - name: KAFKA_CONTROLLER_QUORUM_VOTERS
                         value: "1@localhost:29092"
                       - name: CLUSTER_ID
