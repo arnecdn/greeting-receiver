@@ -13,8 +13,8 @@ use utoipa_swagger_ui::SwaggerUi;
 use greeting::{api, service, kafka_greeting_consumer};
 use settings::Settings;
 
-use crate::greeting::repository::SqliteGreetingRepository;
 use crate::greeting::service::GreetingService;
+use crate::greeting::kafka_producer::KafkaGreetingRepository;
 
 mod greeting;
 mod settings;
@@ -31,14 +31,14 @@ async fn main() -> std::io::Result<()> {
 
     println!("Starting server");
     let app_config = Settings::new();
-
-    let repo = match SqliteGreetingRepository::new(&app_config.database.url).await {
+    let repo = match KafkaGreetingRepository::new(&*app_config.kafka.broker.clone(),"greeting_rust_producer".clone(), &app_config.kafka.topic.clone()){
         Ok(r) => r,
         Err(e) => {
             println!("{:?}", e);
             exit(1)
         }
     };
+
     //Need explicit type in order to enforce type restrictions with dynamoc trait object allocation
     let service_impl = service::GreetingServiceImpl::new(repo);
     let svc: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> = Data::new(RwLock::new(

@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use derive_more::{Display, Error, FromStr};
-use crate::greeting::repository::RepoError;
 
 
 #[async_trait]

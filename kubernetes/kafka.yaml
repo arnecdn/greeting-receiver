@@ -24,7 +24,7 @@ metadata:
         app: kafka
     name: kafka
 spec:
-    replicas: 1
+    replicas: 3
     selector:
         matchLabels:
             app: kafka
@@ -33,6 +33,7 @@ spec:
             labels:
                 app: kafka
         spec:
+            hostname: kafka-0
             containers:
                 - env:
                       - name: KAFKA_PROCESS_ROLES
@@ -42,15 +43,15 @@ spec:
                       - name: KAFKA_CONTROLLER_LISTENER_NAMES
                         value: "CONTROLLER"
                       - name: KAFKA_LISTENERS
-                        value: "CONTROLLER://0.0.0.0:29092,PLAINTEXT://0.0.0.0:9092"
+                        value: "CONTROLLER://:29092,PLAINTEXT://:9092"
                       - name: KAFKA_CONTROLLER_QUORUM_VOTERS
                         value: "1@localhost:29092"
                       - name: CLUSTER_ID
                         value: "ODhCODhFMjEyNDZCNEI0ME"
                       - name: KAFKA_ADVERTISED_LISTENERS
                         value: "PLAINTEXT://localhost:9092"
-#                      - name: KAFKA_INTER_BROKER_LISTENER_NAME
-#                        value : "BROKER"
+                      - name: KAFKA_INTER_BROKER_LISTENER_NAME
+                        value : "PLAINTEXT"
 #                      - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
 #                        value: "CONTROLLER:PLAINTEXT"
 #                      - name: KAFKA_BROKER_ID
@@ -65,12 +66,14 @@ spec:
 #                        value: LISTENER_INTERNAL:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
 #                      - name: KAFKA_INTER_BROKER_LISTENER_NAME
 #                        value: LISTENER_INTERNAL
+#                  command:
+#                      - bash
+#                      - -c
+#                      - /bin/kafka-topics --create --topic greetings --replication-factor 1 --bootstrap-server kafka-0:9092
                   image: confluentinc/cp-kafka:latest
                   imagePullPolicy: IfNotPresent
-                  name: kafka-broker-1
+                  name: kafka
                   ports:
                       - containerPort: 29092
-                        name: kafka-port2
                       - containerPort: 9092
-                        name: kafka-port1
 #                      - containerPort: 30126

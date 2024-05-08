@@ -1,5 +1,5 @@
 [kafka]
-broker = "test:29092"
+broker = "localhost:9092"
 topic = "greetings.public.greeting_logg"
 consumer_group = "greeting_consumers"
 message_timeout_ms = 5000

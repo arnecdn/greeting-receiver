@@ -21,7 +21,7 @@ kind: Deployment
 metadata:
     labels:
         app: kafka-connect
-    name: kafka-connect-deployment
+    name: kafka-connect
 spec:
     replicas: 1
     selector:
@@ -59,6 +59,10 @@ spec:
                         value: "org.apache.kafka.connect.json.JsonConverter"
                       - name: CONNECT_REST_ADVERTISED_HOST_NAME
                         value: "localhost"
+                      - name: CONNECT_LOG4J_ROOT_LOGLEVEL
+                        value: DEBUG
+                      - name: CONNECT_LOG4J_LOGGERS
+                        value: org.apache.kafka.connect=TRACE
 #                 command:
 #                     - bash
 #                     - -c

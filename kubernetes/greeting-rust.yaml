@@ -13,7 +13,7 @@ spec:
         spec:
             containers:
                 -   name: greeting-rust
-                    image: arnecdn/greeting-rust:0.15
+                    image: arnecdn/greeting-rust:0.16
                     imagePullPolicy: IfNotPresent
 
                     ports:
@@ -39,7 +39,7 @@ spec:
                         - name: APP__KAFKA__BROKER
                           value: "kafka-service:9092"
                         - name: APP__KAFKA__TOPIC
-                          value: "greetings.public.greeting_logg"
+                          value: "greetings"
                         - name: APP__KAFKA__CONSUMER_GROUP
                           value: "greeting_consumers"
                         - name: APP__KAFKA__MESSAGE_TIMEOUT_MS
