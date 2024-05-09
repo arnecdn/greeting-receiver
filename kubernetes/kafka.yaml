@@ -36,7 +36,7 @@ spec:
                  imagePullPolicy: IfNotPresent
                  name: kafka
                  ports:
-                     - containerPort: 29093
+                     - containerPort: 29092
                      - containerPort: 9092
 
                  env:
