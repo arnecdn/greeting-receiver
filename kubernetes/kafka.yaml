@@ -53,20 +53,13 @@ spec:
                          fieldRef:
                             apiVersion: v1
                             fieldPath: metadata.name
-
-#                      - name: KAFKA_CONTROLLER_LISTENER_NAMES
-#                        value: "CONTROLLER"
                       - name: KAFKA_LISTENERS
                         value: "CONTROLLER://:29092,PLAINTEXT://:9092"
                       - name: KAFKA_CONTROLLER_QUORUM_VOTERS
                         value: "0@kafka-0.kafka-service.default.svc.cluster.local:29092,1@kafka-1.kafka-service.default.svc.cluster.local:29092,2@kafka-2.kafka-service.default.svc.cluster.local:29092"
-#                        value: "1@kafka-0:29092,2@kafka-1:29092,3@kafka-2:29092"
                       - name: KAFKA_ADVERTISED_LISTENERS
                         value: "PLAINTEXT://$(POD_NAME).kafka-service.default.svc.cluster.local:9092"
-#                      - name: KAFKA_ADVERTISED_LISTENERS
-#                        value: "PLAINTEXT://localhost:9092"
-#                      - name: KAFKA_INTER_BROKER_LISTENER_NAME
-#                        value : "PLAINTEXT"
+
 
 #                  command:
 #                      - bash
