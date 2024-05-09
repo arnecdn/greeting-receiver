@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
     labels:
-        app: kafka
+        app: kafka-app
     name: kafka-service
 spec:
     ports:
@@ -10,70 +10,67 @@ spec:
           port: 9092
           protocol: TCP
           targetPort: 9092
-        - name: kafka-port2
-          port: 29092
-          protocol: TCP
-          targetPort: 29092
     selector:
-        app: kafka
+        app: kafka-app
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
     labels:
-        app: kafka
+        app: kafka-app
     name: kafka
+
 spec:
+    serviceName: kafka-service
     replicas: 3
     selector:
         matchLabels:
-            app: kafka
+            app: kafka-app
     template:
         metadata:
             labels:
-                app: kafka
+                app: kafka-app
         spec:
-            hostname: kafka-0
             containers:
-                - env:
-                      - name: KAFKA_PROCESS_ROLES
-                        value: "controller,broker"
+               - image: docker.io/confluentinc/confluent-local:7.5.0
+                 imagePullPolicy: IfNotPresent
+                 name: kafka
+                 ports:
+                     - containerPort: 29093
+                     - containerPort: 9092
+
+                 env:
+                      - name: ORDINAL_NUMBER
+                        valueFrom:
+                           fieldRef:
+                               fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
                       - name: KAFKA_NODE_ID
-                        value: "1"
-                      - name: KAFKA_CONTROLLER_LISTENER_NAMES
-                        value: "CONTROLLER"
+                        value: "$(ORDINAL_NUMBER)"
+                      - name: CLUSTER_ID
+                        value: "ODhCODhFMjEyNDZCNEI0ME"
+                      - name: POD_NAME
+                        valueFrom:
+                         fieldRef:
+                            apiVersion: v1
+                            fieldPath: metadata.name
+
+#                      - name: KAFKA_CONTROLLER_LISTENER_NAMES
+#                        value: "CONTROLLER"
                       - name: KAFKA_LISTENERS
                         value: "CONTROLLER://:29092,PLAINTEXT://:9092"
                       - name: KAFKA_CONTROLLER_QUORUM_VOTERS
-                        value: "1@localhost:29092"
-                      - name: CLUSTER_ID
-                        value: "ODhCODhFMjEyNDZCNEI0ME"
+                        value: "0@kafka-0.kafka-service.default.svc.cluster.local:29092,1@kafka-1.kafka-service.default.svc.cluster.local:29092,2@kafka-2.kafka-service.default.svc.cluster.local:29092"
+#                        value: "1@kafka-0:29092,2@kafka-1:29092,3@kafka-2:29092"
                       - name: KAFKA_ADVERTISED_LISTENERS
-                        value: "PLAINTEXT://localhost:9092"
-                      - name: KAFKA_INTER_BROKER_LISTENER_NAME
-                        value : "PLAINTEXT"
-#                      - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-#                        value: "CONTROLLER:PLAINTEXT"
-#                      - name: KAFKA_BROKER_ID
-#                        value: "1"
-#                      - name: KAFKA_ZOOKEEPER_CONNECT
-#                        value: zookeeper-service:2181
-#                      - name: KAFKA_LISTENERS
-#                        value: LISTENER_INTERNAL://localhost:9092,LISTENER_EXTERNAL://localhost:29092
+                        value: "PLAINTEXT://$(POD_NAME).kafka-service.default.svc.cluster.local:9092"
 #                      - name: KAFKA_ADVERTISED_LISTENERS
-#                        value: LISTENER_INTERNAL://localhost:9092,LISTENER_EXTERNAL://localhost:29092
-#                      - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-#                        value: LISTENER_INTERNAL:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
+#                        value: "PLAINTEXT://localhost:9092"
 #                      - name: KAFKA_INTER_BROKER_LISTENER_NAME
-#                        value: LISTENER_INTERNAL
+#                        value : "PLAINTEXT"
+
 #                  command:
 #                      - bash
 #                      - -c
-#                      - /bin/kafka-topics --create --topic greetings --replication-factor 1 --bootstrap-server kafka-0:9092
-                  image: confluentinc/cp-kafka:latest
-                  imagePullPolicy: IfNotPresent
-                  name: kafka
-                  ports:
-                      - containerPort: 29092
-                      - containerPort: 9092
-#                      - containerPort: 30126
+#                      - /bin/kafka-topics --create --topic greetings --replication-factor 3 --bootstrap-server kafka-0:9092
+
+
