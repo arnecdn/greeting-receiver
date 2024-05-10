@@ -31,7 +31,7 @@ async fn main() -> std::io::Result<()> {
 
     println!("Starting server");
     let app_config = Settings::new();
-    let repo = match KafkaGreetingRepository::new(&*app_config.kafka.broker.clone(),"greeting_rust_producer".clone(), &app_config.kafka.topic.clone()){
+    let repo = match KafkaGreetingRepository::new(&*app_config.kafka.broker.clone(), &app_config.kafka.topic.clone(),"t"){
         Ok(r) => r,
         Err(e) => {
             println!("{:?}", e);

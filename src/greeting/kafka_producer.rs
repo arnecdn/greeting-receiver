@@ -13,21 +13,16 @@ use uuid::Uuid;
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
 
 pub struct KafkaGreetingRepository {
-    producer: FutureProducer,
-    topic: String
+    // producer: FutureProducer,
+    brokers: String,
+    topic: String,
+    transactional_producer: String
 }
 impl KafkaGreetingRepository{
     pub fn new(brokers: &str, topic: &str, transactional_producer: &str) -> Result<Self, ServiceError>{
-        let producer: FutureProducer = ClientConfig::new()
-            .set("bootstrap.servers", brokers)
-            .set("message.timeout.ms", "5000")
-            .set("enable.idempotence", "true")
-            .set("transactional.id", transactional_producer)
-            .create()
-            .expect("Producer creation error with invalid configuration");
 
 
-        Ok(KafkaGreetingRepository {producer,topic: String::from(topic)})
+        Ok(KafkaGreetingRepository {brokers: String::from(brokers),topic: String::from(topic), transactional_producer: String::from(transactional_producer) })
     }
 }
 #[async_trait]
@@ -37,26 +32,34 @@ impl GreetingRepository for KafkaGreetingRepository {
     }
 
     async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
-        self.producer
-            .init_transactions(Duration::from_secs(5))
-            .expect("Expected to init transactions");
+        let producer: FutureProducer = ClientConfig::new()
+            .set("bootstrap.servers", &self.brokers)
+            .set("message.timeout.ms", "5000")
+            // .set("enable.idempotence", "true")
+            // .set("transactional.id", &self.transactional_producer)
+            .create()
+            .expect("Producer creation error with invalid configuration");
+
+        // producer
+        //     .init_transactions(Duration::from_secs(5))
+        //     .expect("Expected to init transactions");
 
         let msg = GreetingMessage::from(&greeting.clone());
         let x = serde_json::to_string(&msg).unwrap();
-        self.producer
-            .begin_transaction()
-            .expect("Failed beginning transaction");
+        // producer
+        //     .begin_transaction()
+        //     .expect("Failed beginning transaction");
 
-        let future = self.producer.send(
-            FutureRecord::to(&*self.topic).payload(&x).key(&msg.id),
+        producer.send(
+            FutureRecord::to(&self.topic).payload(&x).key(&msg.id),
             Duration::from_secs(0),
-        );
+        ).await;
+        Ok(())
+        //
+        // Ok(producer
+        //     .commit_transaction(Duration::from_secs(5))?)
 
 
-        Ok(self.producer
-            .commit_transaction(Duration::from_secs(5))?)
-
-        // block_on(future).expect("received")
     }
 }
 impl From<KafkaError> for ServiceError {

@@ -35,7 +35,7 @@ pub(crate) async fn consume_and_print(consumer_id: String, brokers: String, grou
     let consumer: LoggingConsumer = ClientConfig::new()
         .set("group.id", group_id)
         .set("bootstrap.servers", &brokers)
-         .set("enable.auto.commit", "false")
+         .set("enable.auto.commit", "true")
         .set_log_level(RDKafkaLogLevel::Debug)
         .create_with_context(context)
         .expect("Consumer creation failed");

@@ -1,10 +1,10 @@
 [kafka]
 broker = "localhost:9092"
-topic = "greetings.public.greeting_logg"
+topic = "greetings"
 consumer_group = "greeting_consumers"
 message_timeout_ms = 5000
 enable_idempotence = true
 processing_guarantee = "exactly_once"
-number_of_consumers = 10
+number_of_consumers = 1
 [database]
 url = "postgres://greeting_rust:greeting_rust@test:5432/greeting_rust"
