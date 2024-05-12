@@ -5,7 +5,6 @@ metadata:
         app: kafka-connect
     name: kafka-connect-service
 spec:
-    type: NodePort
     ports:
         - name: kafka-connect-port1
           port: 8083
@@ -38,7 +37,7 @@ spec:
                  name: kafka-connect
                  env:
                       - name: CONNECT_BOOTSTRAP_SERVERS
-                        value: "kafka-0.kafka-service.default.svc.cluster.local:9092"
+                        value: "kafka-service:9092"
                       - name: CONNECT_GROUP_ID
                         value: "2"
                       - name: CONNECT_CONFIG_STORAGE_TOPIC
@@ -62,12 +61,27 @@ spec:
                       - name: CONNECT_LOG4J_ROOT_LOGLEVEL
                         value: DEBUG
                       - name: CONNECT_LOG4J_LOGGERS
-                        value: org.apache.kafka.connect=TRACE
-#                 command:
-#                     - bash
-#                     - -c
-#                     - confluent-hub install --no-prompt debezium/debezium-connector-postgresql:2.2.1
-#                     - /etc/confluent/docker/run
-
+                        value: org.apache.kafka.connect=DEBUG
+                   #                 command:
+                   #                     - bash
+                   #                     - -c
+                   #                     - confluent-hub install --no-prompt debezium/debezium-connector-postgresql:2.2.1
+                   #                   #                     - /etc/confluent/docker/run
                  ports:
                      - containerPort: 8083
+#---
+#apiVersion: platform.confluent.io/v1beta1
+#kind: Connect
+##metadata:
+##    annotations:
+##        platform.confluent.io/confluent-hub-install-extra-args:
+#spec:
+#    build:
+#        type: onDemand
+#        nDemand:
+#            plugins:
+#                confluentHub:
+#                - name: debezium/debezium-connector-postgresql
+#                  owner: Debezium Community
+#                  version: 2.2.1
+#            storageLimit:

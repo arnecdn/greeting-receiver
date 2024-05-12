@@ -58,7 +58,7 @@ spec:
                       - name: KAFKA_CONTROLLER_QUORUM_VOTERS
                         value: "0@kafka-0.kafka-service.default.svc.cluster.local:29092,1@kafka-1.kafka-service.default.svc.cluster.local:29092,2@kafka-2.kafka-service.default.svc.cluster.local:29092"
                       - name: KAFKA_ADVERTISED_LISTENERS
-                        value: "PLAINTEXT://localhost:9092"
+                        value: "PLAINTEXT://kafka-service:9092"
 
 
 #                  command:
