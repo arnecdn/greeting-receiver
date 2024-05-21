@@ -80,9 +80,11 @@ By reading output, it was pretty easy to relate errors to missing files and exte
 # Deploying image to minikube from local development
 In order to deploy a locally built image from local docker registry follow steps for macos:
 
+
 ```
-docker build -t arnecdn/greeting-rust:<tag> . 
-mkdir .docker && docker image save -o .docker/greeting-rust.tar arnecdn/greeting-rust:<tag>
+TAG="0.21" 
+docker build -q -t "arnecdn/greeting-rust:${TAG}" . &&
+mkdir -p .docker && docker image save -o .docker/greeting-rust.tar "arnecdn/greeting-rust:${TAG}" &&
 minikube image load .docker/greeting-rust.tar
 ```
 From minikube: https://minikube.sigs.k8s.io/docs/handbook/pushing/
@@ -91,4 +93,15 @@ Remember to turn off the imagePullPolicy:Always
 (use imagePullPolicy:IfNotPresent or imagePullPolicy:Never) 
 in your yaml file. Otherwise Kubernetes won’t use your locally build image and 
 it will pull from the network.
+```
+
+Further deployment includes installing additional services on Minikube as Kafka, Kafka-Connect and Postgres. 
+The specs are stored in ./kubernetes/ folder and can be deployed as a unit.
+Make sure the image of rust-docker is available for minikube. See section over. 
+```
+kubectl apply -f kubernetes/kafka.yaml
+kubectl apply -f kubernetes/kafka-connect.yaml
+kubectl apply -f kubernetes/postgres-greeting.yaml
+kubectl apply -f kubernetes/greeting-rust.yaml
+
 ```

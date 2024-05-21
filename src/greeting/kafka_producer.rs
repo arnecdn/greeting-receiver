@@ -20,8 +20,6 @@ pub struct KafkaGreetingRepository {
 }
 impl KafkaGreetingRepository{
     pub fn new(brokers: &str, topic: &str, transactional_producer: &str) -> Result<Self, ServiceError>{
-
-
         Ok(KafkaGreetingRepository {brokers: String::from(brokers),topic: String::from(topic), transactional_producer: String::from(transactional_producer) })
     }
 }

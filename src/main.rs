@@ -10,7 +10,7 @@ use serde::Deserialize;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-use greeting::{api, service, kafka_greeting_consumer};
+use greeting::{api, service};
 use settings::Settings;
 
 use crate::greeting::service::GreetingService;
@@ -48,14 +48,6 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
-    for i in 0..app_config.kafka.number_of_consumers{
-        let kafka_consumer = kafka_greeting_consumer::consume_and_print(String::from("consumer_" ) + &*i.to_string(),
-                                                                        app_config.kafka.broker.clone(),
-                                                                        app_config.kafka.consumer_group.clone(),
-                                                                        app_config.kafka.topic.clone());
-
-        actix_web::rt::spawn(async {  kafka_consumer.await});
-    }
 
     HttpServer::new(move || {
         App::new()
