@@ -13,7 +13,7 @@ spec:
         spec:
             containers:
                 -   name: greeting-rust
-                    image: arnecdn/greeting-rust:0.20
+                    image: arnecdn/greeting-rust:0.22
                     imagePullPolicy: IfNotPresent
 
                     ports:
@@ -37,7 +37,7 @@ spec:
                         - name: APP__DATABASE__URL
                           value: "postgres://$(APP__DATABASE__USER):$(APP__DATABASE__PASSWORD)@postgres-greeting:5432/$(APP__DATABASE__DATABASE)"
                         - name: APP__KAFKA__BROKER
-                          value: "kafka-service:9092"
+                          value: "kafka-service:9093"
                         - name: APP__KAFKA__TOPIC
                           value: "greetings"
                         - name: APP__KAFKA__CONSUMER_GROUP

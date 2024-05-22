@@ -37,7 +37,7 @@ spec:
                  name: kafka-connect
                  env:
                       - name: CONNECT_BOOTSTRAP_SERVERS
-                        value: "kafka-service:9092"
+                        value: "kafka-service:9093"
                       - name: CONNECT_GROUP_ID
                         value: "2"
                       - name: CONNECT_CONFIG_STORAGE_TOPIC
