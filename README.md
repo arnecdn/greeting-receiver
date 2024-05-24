@@ -82,7 +82,7 @@ In order to deploy a locally built image from local docker registry follow steps
 
 
 ```
-TAG="0.22" 
+TAG="0.23" 
 docker build -q -t "arnecdn/greeting-rust:${TAG}" . &&
 mkdir -p .docker && docker image save -o .docker/greeting-rust.tar "arnecdn/greeting-rust:${TAG}" &&
 minikube image load .docker/greeting-rust.tar
