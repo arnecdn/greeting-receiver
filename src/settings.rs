@@ -28,11 +28,9 @@ impl Settings {
 pub (crate) struct Kafka {
     pub (crate) broker: String,
     pub (crate) topic: String,
-    pub (crate) consumer_group: String,
     pub (crate) message_timeout_ms: i32,
     pub (crate) enable_idempotence: bool,
     pub (crate) processing_guarantee: String,
-    pub (crate) number_of_consumers:i32
 }
 #[derive(Deserialize)]
 pub (crate) struct Database {

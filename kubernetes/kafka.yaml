@@ -65,6 +65,13 @@ spec:
                         value: "0@kafka-0.kafka-service.default.svc.cluster.local:29092"
                       - name: KAFKA_ADVERTISED_LISTENERS
                         value: "PLAINTEXT://localhost:9092, PLAINTEXT_HOST://kafka-service:9093"
+                      - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+                        value: "1"
+                      - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+                        value: "1"
+                      - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+                        value: "1"
+
 
 
 #                  command:
