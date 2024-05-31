@@ -100,8 +100,11 @@ The specs are stored in ./kubernetes/ folder and can be deployed as a unit.
 Make sure the image of rust-docker is available for minikube. See section over. 
 ```
 kubectl apply -f kubernetes/kafka.yaml
-kubectl apply -f kubernetes/kafka-connect.yaml
-kubectl apply -f kubernetes/postgres-greeting.yaml
+
 kubectl apply -f kubernetes/greeting-rust.yaml
+
+kubectl exec -it kafka-0 -- bash
+kafka-topics --create --topic greetings --replication-factor 1 --bootstrap-server kafka-0:9092
+
 
 ```

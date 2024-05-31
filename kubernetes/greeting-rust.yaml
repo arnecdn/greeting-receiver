@@ -19,23 +19,7 @@ spec:
                     ports:
                         -   containerPort: 8080
                     env:
-                        -   name: APP__DATABASE__DATABASE
-                            valueFrom:
-                                configMapKeyRef:
-                                    key: POSTGRES_DB
-                                    name: postgres-greeting-config
-                        -   name: APP__DATABASE__USER
-                            valueFrom:
-                                configMapKeyRef:
-                                    key: POSTGRES_USER
-                                    name: postgres-greeting-config
-                        -   name: APP__DATABASE__PASSWORD
-                            valueFrom:
-                                secretKeyRef:
-                                    key: POSTGRES_PASSWORD
-                                    name: postgres-greeting-secret
-                        - name: APP__DATABASE__URL
-                          value: "postgres://$(APP__DATABASE__USER):$(APP__DATABASE__PASSWORD)@postgres-greeting:5432/$(APP__DATABASE__DATABASE)"
+
                         - name: APP__KAFKA__BROKER
                           value: "kafka-service:9093"
                         - name: APP__KAFKA__TOPIC

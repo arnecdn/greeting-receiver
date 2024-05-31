@@ -4,8 +4,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub (crate) struct Settings {
-    pub (crate) kafka: Kafka,
-    pub (crate) database: Database
+    pub (crate) kafka: Kafka
 }
 
 impl Settings {
@@ -31,8 +30,4 @@ pub (crate) struct Kafka {
     pub (crate) message_timeout_ms: i32,
     pub (crate) enable_idempotence: bool,
     pub (crate) processing_guarantee: String,
-}
-#[derive(Deserialize)]
-pub (crate) struct Database {
-    pub(crate) url: String,
 }

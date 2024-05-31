@@ -72,11 +72,8 @@ spec:
                       - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
                         value: "1"
 
-
-
-#                  command:
+#                 command:
 #                      - bash
 #                      - -c
-#                      - /bin/kafka-topics --create --topic greetings --replication-factor 3 --bootstrap-server kafka-0:9092
-
-
+#    kubectl exec -it kafka-0 -- bash
+#                      - kafka-topics --create --topic greetings --replication-factor 1 --bootstrap-server kafka-0:9092
