@@ -36,7 +36,7 @@ spec:
                 app: kafka-app
         spec:
             containers:
-               - image: docker.io/confluentinc/confluent-local:7.5.0
+               - image: docker.io/confluentinc/confluent-local:latest
                  imagePullPolicy: IfNotPresent
                  name: kafka
                  ports:
@@ -62,18 +62,19 @@ spec:
                         value: "CONTROLLER://:29092,PLAINTEXT://:9092, PLAINTEXT_HOST://:9093"
                       - name: KAFKA_CONTROLLER_QUORUM_VOTERS
 #                        value: "0@kafka-0.kafka-service.default.svc.cluster.local:29092,1@kafka-1.kafka-service.default.svc.cluster.local:29092,2@kafka-2.kafka-service.default.svc.cluster.local:29092"
+#                        value: "0@kafka-0.kafka-service.default.svc.cluster.local:29092,1@kafka-1.kafka-service.default.svc.cluster.local:29092"
                         value: "0@kafka-0.kafka-service.default.svc.cluster.local:29092"
                       - name: KAFKA_ADVERTISED_LISTENERS
                         value: "PLAINTEXT://localhost:9092, PLAINTEXT_HOST://kafka-service:9093"
                       - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
                         value: "1"
-                      - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
-                        value: "1"
-                      - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
-                        value: "1"
+#                      - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+#                        value: "1"
+#                      - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+#                        value: "1"
 
 #                 command:
 #                      - bash
 #                      - -c
 #    kubectl exec -it kafka-0 -- bash
-#                      - kafka-topics --create --topic greetings --replication-factor 1 --bootstrap-server kafka-0:9092
+#                      - kafka-topics --create --topic greetings --replication-factor 3 --partitions 10 --bootstrap-server kafka-0:9092

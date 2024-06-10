@@ -13,9 +13,14 @@ spec:
         spec:
             containers:
                 -   name: greeting-rust
-                    image: arnecdn/greeting-rust:0.23
+                    image: arnecdn/greeting-rust:0.24
                     imagePullPolicy: IfNotPresent
-
+                    resources:
+                        requests:
+                            memory: "8Mi"
+                            cpu: "1m"
+                        limits:
+                            memory: "16Mi"
                     ports:
                         -   containerPort: 8080
                     env:

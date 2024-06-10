@@ -6,6 +6,8 @@ use std::sync::RwLock;
 use actix_web::{App, HttpServer};
 
 use actix_web::web::Data;
+use chrono::Local;
+use log::{info, Level, LevelFilter, Metadata, Record};
 use serde::Deserialize;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
@@ -27,9 +29,12 @@ async fn main() -> std::io::Result<()> {
         paths(api::greet, api::list_greetings),
         components(schemas(api::GreetingDto))
     )]
-    struct ApiDoc;
 
-    println!("Starting server");
+    struct ApiDoc;
+    log::set_logger(&CONSOLE_LOGGER).expect("Not able to config logger");
+    log::set_max_level(LevelFilter::Info);
+
+    info!("Starting server");
     let app_config = Settings::new();
     let repo = match KafkaGreetingRepository::new(&*app_config.kafka.broker.clone(), &app_config.kafka.topic.clone(),"t"){
         Ok(r) => r,
@@ -45,8 +50,6 @@ async fn main() -> std::io::Result<()> {
         Box::new(service_impl),
     ));
 
-    env::set_var("RUST_LOG", "debug");
-    env_logger::init();
 
 
     HttpServer::new(move || {
@@ -63,3 +66,20 @@ async fn main() -> std::io::Result<()> {
     .run().await
 }
 
+static CONSOLE_LOGGER: ConsoleLogger = ConsoleLogger;
+
+struct ConsoleLogger;
+
+impl log::Log for ConsoleLogger {
+    fn enabled(&self, metadata: &Metadata) -> bool {
+        metadata.level() <= Level::Info
+    }
+
+    fn log(&self, record: &Record) {
+        if self.enabled(record.metadata()) {
+            println!("{}: {} - {}", Local::now(),record.level(), record.args());
+        }
+    }
+
+    fn flush(&self) {}
+}

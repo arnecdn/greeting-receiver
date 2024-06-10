@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
+use log::info;
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{FutureProducer, FutureRecord, Producer};
 use rdkafka::ClientConfig;
@@ -26,12 +27,14 @@ impl KafkaGreetingRepository {
         let p: FutureProducer = ClientConfig::new()
             .set("bootstrap.servers", brokers)
             .set("message.timeout.ms", "5000")
+            .set("debug", "all")
             .set("enable.idempotence", "true")
             .set("transactional.id", transactional_producer)
+            .set("message.send.max.retries", "10")
             .create()
             .expect("Producer creation error with invalid configuration");
-        p
-            .init_transactions(Duration::from_secs(5))
+
+        p.init_transactions(Duration::from_secs(5))
             .expect("Expected to init transactions");
 
         Ok(KafkaGreetingRepository {
@@ -45,25 +48,25 @@ impl KafkaGreetingRepository {
 #[async_trait]
 impl GreetingRepository for KafkaGreetingRepository {
     async fn all(&self) -> Result<Vec<Greeting>, ServiceError> {
-        panic!("Not implementd")
+        panic!("Not implemented")
     }
 
     async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
-
         let msg = GreetingMessage::from(&greeting.clone());
         let x = serde_json::to_string(&msg).unwrap();
         self.producer
             .begin_transaction()
             .expect("Failed beginning transaction");
+        info!("Sending msg id {}", msg.id);
+        self.producer
+            .send(
+                FutureRecord::to(&self.topic).payload(&x).key(&msg.id),
+                Duration::from_secs(5),
+            )
+            .await
+            .expect("Failed");
 
-        self.producer.send(
-            FutureRecord::to(&self.topic).payload(&x).key(&msg.id),
-            Duration::from_secs(5),
-        ).await.expect("Failed");
-
-
-        self
-            .producer
+        self.producer
             .commit_transaction(Duration::from_secs(5))
             .expect("Error comiting transaction");
         Ok(())

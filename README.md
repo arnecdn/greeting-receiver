@@ -105,6 +105,8 @@ kubectl apply -f kubernetes/greeting-rust.yaml
 
 kubectl exec -it kafka-0 -- bash
 kafka-topics --create --topic greetings --replication-factor 1 --bootstrap-server kafka-0:9092
+kafka-topics --create --topic greetings --replication-factor 3 --partitions 10 --bootstrap-server kafka-0:9092
+kafka-topics --create --topic greetings --partitions 10 --bootstrap-server kafka-0:9092
 
-
+kafka-topics --bootstrap-server kafka-0:9092 --topic greetings --describe
 ```
