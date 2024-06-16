@@ -38,9 +38,7 @@ ENV POSTGRES_DATABASE=""
 # output directory before the cache mounted /app/target is unmounted.
 RUN --mount=type=bind,source=src,target=src \
 #    --mount=type=bind,source=.env,target=.env \
-    --mount=type=bind,source=migrations,target=migrations \
     --mount=type=bind,source=res,target=res \
-    --mount=type=bind,source=.sqlx,target=.sqlx \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
     --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
     --mount=type=cache,target=/app/target/ \
@@ -48,12 +46,8 @@ RUN --mount=type=bind,source=src,target=src \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
     cargo build --locked --release && \
     cp ./target/release/$APP_NAME /usr/bin/server && \
-    mkdir -p /usr/bin/migrations && \
     mkdir -p /usr/bin/res && \
-    mkdir -p /usr/bin/.sqlx && \
-    cp ./migrations/* /usr/bin/migrations && \
-    cp ./res/* /usr/bin/res && \
-    cp ./.sqlx/* /usr/bin/.sqlx
+    cp ./res/* /usr/bin/res
 
 ################################################################################
 # Create a new stage for running the application that contains the minimal
@@ -68,9 +62,8 @@ RUN --mount=type=bind,source=src,target=src \
 FROM rust:${RUST_VERSION} AS final
 RUN apt-get update && apt-get install -y cmake strace
 
-RUN mkdir -p /usr/bin/migrations && \
-    mkdir -p /usr/bin/res && \
-    mkdir -p /usr/bin/.sql
+RUN mkdir -p /usr/bin/res
+
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/go/dockerfile-user-best-practices/
@@ -88,9 +81,7 @@ USER appuser
 # Copy the executable from the "build" stage.
 
 COPY --chown=appuser:appuser --from=build /usr/bin/server /usr/bin
-COPY --chown=appuser:appuser --from=build /usr/bin/migrations /usr/bin/migrations
 COPY --chown=appuser:appuser --from=build /usr/bin/res /usr/bin/res
-COPY --chown=appuser:appuser --from=build /usr/bin/.sqlx /usr/bin/.sqlx
 
 
 #RUN chmod -R 755 /bin/server
@@ -100,5 +91,5 @@ EXPOSE 8080
 # What the container should run when it is started.
 #WORKDIR "/bin/"
 #ENTRYPOINT ["/usr/bin/server"]
-ENTRYPOINT ["tail"]
-CMD ["-f","/dev/null"]
+#ENTRYPOINT ["tail"]
+#CMD ["-f","/dev/null"]

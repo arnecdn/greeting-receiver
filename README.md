@@ -59,17 +59,6 @@ Added to the "# Install host build dependencies."
 #RUN apk add --no-cache clang lld musl-dev git librdkafka-dev g++ make
 ```
 
-## Building app with SQLX 
-In order to build application with sqlx, the macros used in code need to validate SQL
-Tryding to use the updated query-cache from development
-Set 
-```
-ENV SQLX_OFFLINE true
-```
-Mount generated sqlx cache to build 
-```
---mount=type=bind,source=.sqlx,target=.sqlx \
-```
 
 After some work making Dockerfile build a successfull image, the container refused to run. 
 In order to investiage, I installed the utility strace in order to trace the linux environment
