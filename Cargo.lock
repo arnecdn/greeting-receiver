@@ -121,18 +121,18 @@ dependencies = [
 
 [[package]]
 name = "actix-settings"
-version = "0.6.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d91837563eaa28ddbc404123a6044da43d3d726f67c9f7d71a610103a488c99c"
+checksum = "a9cfe9e9fc31f072c11d0eecc8de8d769fe0f328df7663c56df12a0df71f82d6"
 dependencies = [
  "actix-http",
  "actix-service",
  "actix-web",
- "ioe",
+ "derive_more",
  "once_cell",
  "regex",
  "serde",
- "toml 0.5.11",
+ "toml",
 ]
 
 [[package]]
@@ -436,7 +436,7 @@ dependencies = [
  "rust-ini",
  "serde",
  "serde_json",
- "toml 0.8.12",
+ "toml",
  "yaml-rust",
 ]
 
@@ -565,34 +565,6 @@ dependencies = [
  "darling_core",
  "quote",
  "syn 2.0.58",
-]
-
-[[package]]
-name = "deltoid"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2e79ceed5b78b55107105b3862cd826562fcede2ac802292bb3d1b0f11427b5"
-dependencies = [
- "chrono",
- "js-sys",
- "serde",
- "serde_derive",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
-name = "deltoid-derive"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9499963f602a85ceec19d8e4d0819bea3da08807885616eb70214ca6deaa6971"
-dependencies = [
- "deltoid",
- "proc-macro2",
- "quote",
- "serde",
- "serde_derive",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -852,7 +824,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "thiserror",
- "toml 0.8.12",
+ "toml",
  "utoipa",
  "utoipa-swagger-ui",
  "uuid",
@@ -1013,18 +985,6 @@ dependencies = [
  "equivalent",
  "hashbrown 0.14.3",
  "serde",
-]
-
-[[package]]
-name = "ioe"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2dc0da5b6f9750dd636c77037ebbf5d30c2a1eab392b25a3522592a9eb05587"
-dependencies = [
- "deltoid",
- "deltoid-derive",
- "serde",
- "serde_derive",
 ]
 
 [[package]]
@@ -1947,15 +1907,6 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.5.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4f7f0dd8d50a853a531c426359045b1998f04219d88799810762cd4ad314234"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "toml"
 version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9dd1545e8208b4a5af1aa9bbd0b4cf7e9ea08fabc5d0a5c67fcaafa17433aa3"
@@ -2205,8 +2156,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4be2531df63900aeb2bca0daaaddec08491ee64ceecbee5076636a3b026795a8"
 dependencies = [
  "cfg-if",
- "serde",
- "serde_json",
  "wasm-bindgen-macro",
 ]
 
@@ -2253,16 +2202,6 @@ name = "wasm-bindgen-shared"
 version = "0.2.92"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af190c94f2773fdb3729c55b007a722abb5384da03bc0986df4c289bf5567e96"
-
-[[package]]
-name = "web-sys"
-version = "0.3.69"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77afa9a11836342370f4817622a2f0f418b134426d91a82dfb48f532d2ec13ef"
-dependencies = [
- "js-sys",
- "wasm-bindgen",
-]
 
 [[package]]
 name = "winapi"
