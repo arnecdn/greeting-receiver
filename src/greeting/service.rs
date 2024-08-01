@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
-use derive_more::{Display, Error, FromStr};
+use derive_more::{Display};
 
 
 #[async_trait]
@@ -44,7 +44,7 @@ impl <C:GreetingRepository+  Sync + Send > GreetingService for GreetingServiceIm
 
 #[derive(Debug, Display)]
 pub enum ServiceError{
-    UnrecognizedGreetingError,
+
     RepoError(String)
 }
 
@@ -58,17 +58,6 @@ pub struct Greeting{
     pub(crate) created: NaiveDateTime,
 }
 
-impl Greeting {
-    pub fn new(to: String, from: String, heading: String, message: String) -> Greeting {
-        Greeting {
-            to,
-            from,
-            heading,
-            message,
-            created: NaiveDateTime::default(),
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {

@@ -1,5 +1,5 @@
-use std::{env, fs};
-use std::future::Future;
+
+
 use std::process::exit;
 use std::sync::RwLock;
 
@@ -8,7 +8,7 @@ use actix_web::{App, HttpServer};
 use actix_web::web::Data;
 use chrono::Local;
 use log::{info, Level, LevelFilter, Metadata, Record};
-use serde::Deserialize;
+
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -36,7 +36,7 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting server");
     let app_config = Settings::new();
-    let repo = match KafkaGreetingRepository::new(&*app_config.kafka.broker.clone(), &app_config.kafka.topic.clone(),"t"){
+    let repo = match KafkaGreetingRepository::new(app_config.kafka , "producer_1"){
         Ok(r) => r,
         Err(e) => {
             println!("{:?}", e);

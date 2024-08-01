@@ -11,25 +11,23 @@ use serde_json;
 use uuid::Uuid;
 
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
+use crate::settings::Kafka;
 
 pub struct KafkaGreetingRepository {
     producer: FutureProducer,
-    brokers: String,
     topic: String,
-    transactional_producer: String,
 }
 impl KafkaGreetingRepository {
     pub fn new(
-        brokers: &str,
-        topic: &str,
-        transactional_producer: &str,
+        config: Kafka,
+        transactional_id: &str
     ) -> Result<Self, ServiceError> {
         let p: FutureProducer = ClientConfig::new()
-            .set("bootstrap.servers", brokers)
-            .set("message.timeout.ms", "5000")
+            .set("bootstrap.servers", config.broker.clone())
+            .set("message.timeout.ms", config.message_timeout_ms.to_string())
             .set("debug", "all")
-            .set("enable.idempotence", "true")
-            .set("transactional.id", transactional_producer)
+            .set("enable.idempotence", config.enable_idempotence.to_string())
+            .set("transactional.id", transactional_id)
             .set("message.send.max.retries", "10")
             .create()
             .expect("Producer creation error with invalid configuration");
@@ -39,9 +37,8 @@ impl KafkaGreetingRepository {
 
         Ok(KafkaGreetingRepository {
             producer: p,
-            brokers: String::from(brokers),
-            topic: String::from(topic),
-            transactional_producer: String::from(transactional_producer),
+            topic: String::from(config.topic.clone()),
+
         })
     }
 }
@@ -77,35 +74,7 @@ impl From<KafkaError> for ServiceError {
         ServiceError::RepoError(_error.to_string())
     }
 }
-// pub(crate) fn produce(brokers: &str, topic_name: &str, greeting: GreetingEntity) {
-//
-// let producer: &FutureProducer = &ClientConfig::new()
-//     .set("bootstrap.servers", brokers)
-//     .set("message.timeout.ms", "5000")
-//     .set("enable.idempotence", "true")
-//     .set("transactional.id ", "message_id")
-//     .create()
-//     .expect("Producer creation error with invalid configuration");
-//
-// producer
-//     .init_transactions(Duration::from_secs(5))
-//     .expect("Expected to init transactions");
 
-// let msg = GreetingMessage::from(&greeting.clone());
-// let x = serde_json::to_string(&msg).unwrap();
-// producer
-//     .begin_transaction()
-//     .expect("Failed beginning transaction");
-//
-// let future = producer.send(
-//     FutureRecord::to(topic_name).payload(&x).key(&msg.id),
-//     Duration::from_secs(0),
-// );
-// producer
-//     .commit_transaction(Duration::from_secs(5))
-//     .expect("Unable to commit transaction`");
-// block_on(future).expect("received");
-// }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GreetingMessage {
     id: String,

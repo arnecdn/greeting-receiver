@@ -35,10 +35,6 @@ spec:
                           value: "5000"
                         - name: APP__KAFKA__ENABLE_IDEMPOTENCE
                           value: "true"
-                        - name: APP__KAFKA__PROCESSING_GUARANTEE
-                          value: "exactly_once"
-                        - name: APP__KAFKA__NUMBER_OF_CONSUMERS
-                          value: "1"
                     command:
                               - "/usr/bin/server"
 

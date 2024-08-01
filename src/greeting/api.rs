@@ -6,7 +6,7 @@ use actix_web::http::StatusCode;
 use actix_web::web::Data;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use derive_more::{Display, Error};
+use derive_more::{Display};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
