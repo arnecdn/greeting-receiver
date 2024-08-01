@@ -16,8 +16,8 @@ utoipa = { version = "4", features = ["actix_extras"] }
 utoipa-swagger-ui = { version = "7", features = ["actix-web"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "1.0.47"
-validator = "0.16.1"
-validator_derive = "0.16.0"
+validator = "0.18.1"
+validator_derive = "0.18.1"
 derive_more = "0.99.18"
 uuid = { version = "1.10.0", features = ["v7"]}
 env_logger = "0.10.0"
