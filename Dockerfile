@@ -23,11 +23,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y cmake
 ENV SQLX_OFFLINE true
 
-ENV DATABASE_URL=""
-ENV POSTGRES_HOST=""
-ENV POSTGRES_USER=""
-ENV POSTGRES_PASSWORD=""
-ENV POSTGRES_DATABASE=""
+
 # Build the application.
 # Leverage a cache mount to /usr/local/cargo/registry/
 # for downloaded dependencies, a cache mount to /usr/local/cargo/git/db
@@ -38,16 +34,14 @@ ENV POSTGRES_DATABASE=""
 # output directory before the cache mounted /app/target is unmounted.
 RUN --mount=type=bind,source=src,target=src \
 #    --mount=type=bind,source=.env,target=.env \
-    --mount=type=bind,source=res,target=res \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
     --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
     --mount=type=cache,target=/app/target/ \
     --mount=type=cache,target=/usr/local/cargo/git/db \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
     cargo build --locked --release && \
-    cp ./target/release/$APP_NAME /usr/bin/server && \
-    mkdir -p /usr/bin/res && \
-    cp ./res/* /usr/bin/res
+    cp ./target/release/$APP_NAME /usr/bin/server
+
 
 ################################################################################
 # Create a new stage for running the application that contains the minimal
@@ -61,8 +55,6 @@ RUN --mount=type=bind,source=src,target=src \
 # (e.g., alpine@sha256:664888ac9cfd28068e062c991ebcff4b4c7307dc8dd4df9e728bedde5c449d91).
 FROM rust:${RUST_VERSION} AS final
 RUN apt-get update && apt-get install -y cmake strace
-
-RUN mkdir -p /usr/bin/res
 
 
 # Create a non-privileged user that the app will run under.
@@ -81,7 +73,7 @@ USER appuser
 # Copy the executable from the "build" stage.
 
 COPY --chown=appuser:appuser --from=build /usr/bin/server /usr/bin
-COPY --chown=appuser:appuser --from=build /usr/bin/res /usr/bin/res
+
 
 
 #RUN chmod -R 755 /bin/server
