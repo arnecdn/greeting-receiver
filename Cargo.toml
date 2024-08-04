@@ -20,7 +20,7 @@ validator = "0.18.1"
 validator_derive = "0.18.1"
 derive_more = "0.99.18"
 uuid = { version = "1.10.0", features = ["v7"]}
-env_logger = "0.10.0"
+#env_logger = "0.10.0"
 rdkafka = { version = "0.36.2", features = ["cmake-build"] }
 futures = "0.3"
 async-trait = "0.1.77"
@@ -28,4 +28,10 @@ log = { version = "0.4.20", features = [] }
 serde_with = "3.6.1"
 config = "0.14.0"
 dotenv = "0.15.0"
+opentelemetry = "0.24.0"
+opentelemetry_sdk = "0.24.1"
+opentelemetry-stdout = { version = "0.5.0", features = ["trace"] }
+opentelemetry-appender-log = "0.5.0"
+opentelemetry-semantic-conventions="0.16.0"
+
 

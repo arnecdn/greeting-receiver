@@ -83,3 +83,8 @@ kafka-topics --create --topic greetings --partitions 10 --bootstrap-server kafka
 
 kafka-topics --bootstrap-server kafka-0:9092 --topic greetings --describe
 ```
+
+
+### Observability
+Observability is implemented based on OpenTelemetry.
+Further documentation to 
