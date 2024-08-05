@@ -36,24 +36,8 @@ async fn main() -> std::io::Result<()> {
     )]
 
     struct ApiDoc;
-    // Setup LoggerProvider with a stdout exporter
-    let exporter = opentelemetry_stdout::LogExporterBuilder::default()
-        // uncomment the below lines to pretty print output.
-        // .with_encoder(|writer, data|
-        //    Ok(serde_json::to_writer_pretty(writer, &data).unwrap()))
-        .build();
-    let logger_provider = LoggerProvider::builder()
-        .with_resource(Resource::new([KeyValue::new(
-            SERVICE_NAME,
-            "greeting_rust",
-        )]))
-        .with_simple_exporter(exporter)
-        .build();
 
-    // Setup Log Appender for the log crate.
-    let otel_log_appender = OpenTelemetryLogBridge::new(&logger_provider);
-    log::set_boxed_logger(Box::new(otel_log_appender)).unwrap();
-    log::set_max_level(Level::Info.to_level_filter());
+    init_logging();
 
     info!("Starting server");
     let app_config = Settings::new();
@@ -85,4 +69,25 @@ async fn main() -> std::io::Result<()> {
     })
     .bind(("127.0.0.1", 8080))?
     .run().await
+}
+
+fn init_logging() {
+// Setup LoggerProvider with a stdout exporter
+    let exporter = opentelemetry_stdout::LogExporterBuilder::default()
+        // uncomment the below lines to pretty print output.
+        // .with_encoder(|writer, data|
+        //    Ok(serde_json::to_writer_pretty(writer, &data).unwrap()))
+        .build();
+    let logger_provider = LoggerProvider::builder()
+        .with_resource(Resource::new([KeyValue::new(
+            SERVICE_NAME,
+            "greeting_rust",
+        )]))
+        .with_simple_exporter(exporter)
+        .build();
+
+    // Setup Log Appender for the log crate.
+    let otel_log_appender = OpenTelemetryLogBridge::new(&logger_provider);
+    log::set_boxed_logger(Box::new(otel_log_appender)).unwrap();
+    log::set_max_level(Level::Info.to_level_filter());
 }
