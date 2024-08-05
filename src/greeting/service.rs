@@ -71,14 +71,12 @@ mod tests {
         let mut service = GreetingServiceImpl::new(mock_repo);
 
         let greeting = Greeting::new(String::from("John"), String::from("Jane"), String::from("Hello"), String::from("Hi John!"));
-
         // Act
         let result = service.receive_greeting(greeting.clone());
 
         // Assert
-        assert!(block_on(result).is_ok());
         let all_result = service.all_greetings();
-
+        assert!(block_on(result).is_ok());
         assert_eq!(block_on(all_result).unwrap(), vec![greeting]);
     }
 
@@ -106,7 +104,17 @@ mod tests {
             Ok(())
         }
     }
-
+impl Greeting {
+    pub fn new(to: String, from: String, heading: String, message: String) -> Greeting {
+        Greeting {
+            to,
+            from,
+            heading,
+            message,
+            created: NaiveDateTime::default(),
+        }
+    }
+}
 }
 
 

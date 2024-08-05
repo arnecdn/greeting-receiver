@@ -88,3 +88,9 @@ kafka-topics --bootstrap-server kafka-0:9092 --topic greetings --describe
 ### Observability
 Observability is implemented based on OpenTelemetry.
 Further documentation to 
+install LGTM stack
+
+```
+helm install my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0 --create-namespace
+helm uninstall my-lgtm-distributed grafana/lgtm-distributed -n lgtm-stack
+```

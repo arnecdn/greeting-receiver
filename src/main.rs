@@ -6,8 +6,8 @@ use std::sync::RwLock;
 use actix_web::{App, HttpServer};
 
 use actix_web::web::Data;
-use chrono::Local;
-use log::{info, Level, LevelFilter, Metadata, Record};
+
+use log::{info, Level};
 use opentelemetry::KeyValue;
 use opentelemetry_appender_log::OpenTelemetryLogBridge;
 use opentelemetry_sdk::logs::LoggerProvider;
