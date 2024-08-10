@@ -7,6 +7,8 @@ use actix_web::web::Data;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use derive_more::{Display};
+use opentelemetry::global;
+use opentelemetry::trace::{Span, SpanKind, Status, Tracer};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
@@ -50,13 +52,21 @@ pub async fn greet(
     data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
+    let tracer = global::tracer("greeting");
+
+    let mut span = tracer
+        .span_builder(format!("{} {}", "POST", "/greeting"))
+        .with_kind(SpanKind::Server)
+        .start(&tracer);
+
     greeting.validate()?;
 
     if let Ok(mut guard) = data.write(){
         guard.receive_greeting(Greeting::from(greeting.0)).await?;
+        span.set_status(Status::Ok);
         return Ok(HttpResponse::Ok().body(""));
     }
-
+    span.set_status(Status::error("Not able to handle data"));
     Err(Applicationerror)
 }
 

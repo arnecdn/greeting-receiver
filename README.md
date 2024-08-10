@@ -55,7 +55,7 @@ In order to deploy a locally built image from local docker registry follow steps
 
 
 ```
-TAG="0.23" 
+TAG="0.27" 
 docker build -q -t "arnecdn/greeting-rust:${TAG}" . &&
 mkdir -p .docker && docker image save -o .docker/greeting-rust.tar "arnecdn/greeting-rust:${TAG}" &&
 minikube image load .docker/greeting-rust.tar
@@ -93,4 +93,9 @@ install LGTM stack
 ```
 helm install my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0 --create-namespace
 helm uninstall my-lgtm-distributed grafana/lgtm-distributed -n lgtm-stack
+```
+install alloy
+```
+helm install my-lgtm-grafana-alloy grafana/alloy -n lgtm-stack
+helm upgrade --namespace lgtm-stack my-lgtm-grafana-alloy grafana/alloy -f grafana-alloy-values.yaml
 ```

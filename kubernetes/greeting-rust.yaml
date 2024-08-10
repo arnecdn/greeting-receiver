@@ -13,7 +13,7 @@ spec:
         spec:
             containers:
                 -   name: greeting-rust
-                    image: arnecdn/greeting-rust:0.26
+                    image: arnecdn/greeting-rust:0.28
                     imagePullPolicy: IfNotPresent
                     resources:
                         requests:

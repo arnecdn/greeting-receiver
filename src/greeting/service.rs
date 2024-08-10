@@ -66,17 +66,14 @@ mod tests {
 
     #[test]
     fn test_receive_greeting() {
-        // Arrange
         let  mock_repo = MockGreetingRepository::new();
         let mut service = GreetingServiceImpl::new(mock_repo);
 
         let greeting = Greeting::new(String::from("John"), String::from("Jane"), String::from("Hello"), String::from("Hi John!"));
-        // Act
         let result = service.receive_greeting(greeting.clone());
-
-        // Assert
-        let all_result = service.all_greetings();
         assert!(block_on(result).is_ok());
+
+        let all_result = service.all_greetings();
         assert_eq!(block_on(all_result).unwrap(), vec![greeting]);
     }
 

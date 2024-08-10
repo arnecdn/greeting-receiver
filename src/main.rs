@@ -1,5 +1,3 @@
-
-
 use std::process::exit;
 use std::sync::RwLock;
 
@@ -7,21 +5,23 @@ use actix_web::{App, HttpServer};
 
 use actix_web::web::Data;
 
-use log::{info, Level};
-use opentelemetry::KeyValue;
+use log::{error, info, Level};
+use opentelemetry::{global, KeyValue};
 use opentelemetry_appender_log::OpenTelemetryLogBridge;
 use opentelemetry_sdk::logs::LoggerProvider;
+use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::trace::TracerProvider;
+use opentelemetry_stdout::SpanExporter;
 use opentelemetry_semantic_conventions::resource::SERVICE_NAME;
-
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use greeting::{api, service};
 use settings::Settings;
 
-use crate::greeting::service::GreetingService;
 use crate::greeting::kafka_producer::KafkaGreetingRepository;
+use crate::greeting::service::GreetingService;
 
 mod greeting;
 mod settings;
@@ -36,26 +36,23 @@ async fn main() -> std::io::Result<()> {
     )]
 
     struct ApiDoc;
-
     init_logging();
+    init_tracer();
 
     info!("Starting server");
     let app_config = Settings::new();
-    let repo = match KafkaGreetingRepository::new(app_config.kafka , "producer_1"){
+    let repo = match KafkaGreetingRepository::new(app_config.kafka, "producer_1") {
         Ok(r) => r,
         Err(e) => {
-            println!("{:?}", e);
+            error!("{:?}", e);
             exit(1)
         }
     };
 
     //Need explicit type in order to enforce type restrictions with dynamoc trait object allocation
     let service_impl = service::GreetingServiceImpl::new(repo);
-    let svc: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> = Data::new(RwLock::new(
-        Box::new(service_impl),
-    ));
-
-
+    let svc: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> =
+        Data::new(RwLock::new(Box::new(service_impl)));
 
     HttpServer::new(move || {
         App::new()
@@ -68,11 +65,21 @@ async fn main() -> std::io::Result<()> {
             )
     })
     .bind(("127.0.0.1", 8080))?
-    .run().await
+    .run()
+    .await
+}
+
+fn init_tracer() {
+    global::set_text_map_propagator(TraceContextPropagator::new());
+    let provider = TracerProvider::builder()
+        .with_simple_exporter(SpanExporter::default())
+        .build();
+    global::set_tracer_provider(provider);
+
 }
 
 fn init_logging() {
-// Setup LoggerProvider with a stdout exporter
+    // Setup LoggerProvider with a stdout exporter
     let exporter = opentelemetry_stdout::LogExporterBuilder::default()
         // uncomment the below lines to pretty print output.
         // .with_encoder(|writer, data|
