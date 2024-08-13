@@ -4,15 +4,13 @@ use std::sync::RwLock;
 use actix_web::{App, HttpServer};
 
 use actix_web::web::Data;
-
 use log::{error, info, Level};
 use opentelemetry::{global, KeyValue};
 use opentelemetry_appender_log::OpenTelemetryLogBridge;
 use opentelemetry_sdk::logs::LoggerProvider;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
-use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::{Resource, runtime};
 use opentelemetry_sdk::trace::TracerProvider;
-use opentelemetry_stdout::SpanExporter;
 use opentelemetry_semantic_conventions::resource::SERVICE_NAME;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
@@ -37,7 +35,6 @@ async fn main() -> std::io::Result<()> {
 
     struct ApiDoc;
     init_logging();
-    init_tracer();
 
     info!("Starting server");
     let app_config = Settings::new();
@@ -69,17 +66,11 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-fn init_tracer() {
-    global::set_text_map_propagator(TraceContextPropagator::new());
-    let provider = TracerProvider::builder()
-        .with_simple_exporter(SpanExporter::default())
-        .build();
-    global::set_tracer_provider(provider);
-
-}
-
 fn init_logging() {
     // Setup LoggerProvider with a stdout exporter
+    //let otlp_log_exporter = opentelemetry_otlp::new_exporter().tonic()
+    //    .build_log_exporter().unwrap();
+
     let exporter = opentelemetry_stdout::LogExporterBuilder::default()
         // uncomment the below lines to pretty print output.
         // .with_encoder(|writer, data|
@@ -91,6 +82,7 @@ fn init_logging() {
             "greeting_rust",
         )]))
         .with_simple_exporter(exporter)
+        //.with_simple_exporter(otlp_log_exporter)
         .build();
 
     // Setup Log Appender for the log crate.

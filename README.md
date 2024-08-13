@@ -99,3 +99,5 @@ install alloy
 helm install my-lgtm-grafana-alloy grafana/alloy -n lgtm-stack
 helm upgrade --namespace lgtm-stack my-lgtm-grafana-alloy grafana/alloy -f grafana-alloy-values.yaml
 ```
+
+
