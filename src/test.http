@@ -1,7 +1,0 @@
-GET localhost:8080
-
-###
-
-POST localhost:8080/echo
-
-Heisann

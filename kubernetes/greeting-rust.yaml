@@ -13,7 +13,7 @@ spec:
         spec:
             containers:
                 -   name: greeting-rust
-                    image: arnecdn/greeting-rust:0.29
+                    image: arnecdn/greeting-rust:0.31
                     imagePullPolicy: IfNotPresent
                     resources:
                         requests:
@@ -35,6 +35,9 @@ spec:
                           value: "5000"
                         - name: APP__KAFKA__ENABLE_IDEMPOTENCE
                           value: "true"
+                        - name: APP__OTEL_COLLECTOR__OLTP_ENDPOINT
+                          value: "http://my-opentelemetry-collector:4317"
+
                     command:
                               - "/usr/bin/server"
 

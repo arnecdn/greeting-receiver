@@ -1,7 +1,0 @@
-{
-  "name": "greeting-connector",
-  "config": {
-    "signal.kafka.topic": "greeting.signal"
-  }
-}
-

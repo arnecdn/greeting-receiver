@@ -4,7 +4,9 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub (crate) struct Settings {
-    pub (crate) kafka: Kafka
+    pub (crate) kafka: Kafka,
+    pub (crate) otel_collector: OtelCollector
+
 }
 
 impl Settings {
@@ -27,4 +29,9 @@ pub (crate) struct Kafka {
     pub (crate) topic: String,
     pub (crate) message_timeout_ms: i32,
     pub (crate) enable_idempotence: bool,
+}
+
+#[derive(Deserialize)]
+pub (crate) struct OtelCollector{
+    pub (crate) oltp_endpoint: String
 }

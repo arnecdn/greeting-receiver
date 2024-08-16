@@ -55,7 +55,7 @@ In order to deploy a locally built image from local docker registry follow steps
 
 
 ```
-TAG="0.27" 
+TAG="0.29" 
 docker build -q -t "arnecdn/greeting-rust:${TAG}" . &&
 mkdir -p .docker && docker image save -o .docker/greeting-rust.tar "arnecdn/greeting-rust:${TAG}" &&
 minikube image load .docker/greeting-rust.tar
@@ -98,6 +98,11 @@ install alloy
 ```
 helm install my-lgtm-grafana-alloy grafana/alloy -n lgtm-stack
 helm upgrade --namespace lgtm-stack my-lgtm-grafana-alloy grafana/alloy -f grafana-alloy-values.yaml
+helm install my-opentelemetry-collector open-telemetry/opentelemetry-collector \
+   --set image.repository="otel/opentelemetry-collector-k8s" \
+   --set mode=statefulset
+   
+helm upgrade my-opentelemetry-collector open-telemetry/opentelemetry-collector --values kubernetes/helm-otel-collector-values.yaml 
 ```
 
 
