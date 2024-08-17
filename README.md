@@ -92,10 +92,12 @@ install LGTM stack
 
 ```
 helm install my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0 --create-namespace
+helm upgrade my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0
 helm uninstall my-lgtm-distributed grafana/lgtm-distributed -n lgtm-stack
 ```
 install alloy
 ```
+helm install my-lgtm-grafana-alloy grafana/alloy -n lgtm-stack
 helm install my-lgtm-grafana-alloy grafana/alloy -n lgtm-stack
 helm upgrade --namespace lgtm-stack my-lgtm-grafana-alloy grafana/alloy -f grafana-alloy-values.yaml
 helm install my-opentelemetry-collector open-telemetry/opentelemetry-collector \

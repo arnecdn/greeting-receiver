@@ -93,8 +93,8 @@ configMap:
 # For example, {{ REDACTED_EMAIL }} becomes {{` {{ REDACTED_EMAIL }} `}}.
 config:
   exporters:
-    otlphttp:
-      endpoint: http://my-lgtm-distributed-loki-distributor:3100/otlp/v1/logs
+    loki:
+      endpoint: http://my-lgtm-distributed-loki-distributor.lgtm-stack.svc.cluster.local:3100/loki/api/v1/push
     debug:
       verbosity: normal
   extensions:
@@ -148,7 +148,7 @@ config:
       logs:
         exporters:
           - debug
-          - otlphttp
+          - loki
         processors:
           - memory_limiter
           - batch
