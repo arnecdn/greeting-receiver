@@ -97,8 +97,7 @@ helm uninstall my-lgtm-distributed grafana/lgtm-distributed -n lgtm-stack
 ```
 install alloy
 ```
-helm install my-lgtm-grafana-alloy grafana/alloy -n lgtm-stack
-helm install my-lgtm-grafana-alloy grafana/alloy -n lgtm-stack
+
 helm upgrade --namespace lgtm-stack my-lgtm-grafana-alloy grafana/alloy -f grafana-alloy-values.yaml
 helm install my-opentelemetry-collector open-telemetry/opentelemetry-collector \
    --set image.repository="otel/opentelemetry-collector-k8s" \

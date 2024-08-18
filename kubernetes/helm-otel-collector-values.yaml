@@ -95,6 +95,10 @@ config:
   exporters:
     loki:
       endpoint: http://my-lgtm-distributed-loki-distributor.lgtm-stack.svc.cluster.local:3100/loki/api/v1/push
+    otlp:
+      endpoint: my-lgtm-distributed-tempo-distributor.lgtm-stack.svc.cluster.local:4317
+      tls:
+        insecure: true
     debug:
       verbosity: normal
   extensions:
@@ -166,6 +170,7 @@ config:
       traces:
         exporters:
           - debug
+          - otlp
         processors:
           - memory_limiter
           - batch

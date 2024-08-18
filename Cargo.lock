@@ -915,6 +915,8 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml",
+ "tracing",
+ "tracing-core",
  "tracing-subscriber",
  "utoipa",
  "utoipa-swagger-ui",

@@ -9,12 +9,13 @@ use log::{error, info, Level};
 use once_cell::sync::Lazy;
 use opentelemetry::{global, KeyValue};
 use opentelemetry::logs::LogError;
+use opentelemetry::trace::TraceError;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::logs::LoggerProvider;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::{Resource, runtime};
-use opentelemetry_sdk::trace::TracerProvider;
+use opentelemetry_sdk::trace::{Config, TracerProvider};
 use opentelemetry_semantic_conventions::resource::SERVICE_NAME;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -41,6 +42,11 @@ async fn main() -> std::io::Result<()> {
 
     struct ApiDoc;
     let app_config = Settings::new();
+
+    let result = init_tracer_provider(&app_config.otel_collector.oltp_endpoint);
+    let tracer_provider = result.unwrap();
+    global::set_tracer_provider(tracer_provider.clone());
+
     // Initialize logs and save the logger_provider.
     let logger_provider = init_logs(&app_config.otel_collector.oltp_endpoint).unwrap();
 
@@ -78,6 +84,7 @@ async fn main() -> std::io::Result<()> {
         .bind(("127.0.0.1", 8080))?
         .run()
         .await.expect("Error stopping server");
+    global::shutdown_tracer_provider();
     logger_provider.shutdown().expect("Failed shutting down loggprovider");
     Ok(())
 }
@@ -88,14 +95,26 @@ static RESOURCE: Lazy<Resource> = Lazy::new(|| {
     )])
 });
 
-fn init_logs(oltp_endpoint: &str) -> Result<LoggerProvider, LogError> {
+fn init_logs(otlp_endpoint: &str) -> Result<LoggerProvider, LogError> {
     opentelemetry_otlp::new_pipeline()
         .logging()
         .with_resource(RESOURCE.clone())
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
-                .with_endpoint(oltp_endpoint),
+                .with_endpoint(otlp_endpoint),
         )
+        .install_batch(runtime::Tokio)
+}
+
+fn init_tracer_provider(otlp_endpoint: &str) -> Result<TracerProvider, TraceError> {
+    opentelemetry_otlp::new_pipeline()
+        .tracing()
+        .with_exporter(
+            opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_endpoint(otlp_endpoint),
+        )
+        .with_trace_config(Config::default().with_resource(RESOURCE.clone()))
         .install_batch(runtime::Tokio)
 }
