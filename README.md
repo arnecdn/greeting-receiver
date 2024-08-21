@@ -95,15 +95,16 @@ helm install my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed
 helm upgrade my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0
 helm uninstall my-lgtm-distributed grafana/lgtm-distributed -n lgtm-stack
 ```
-install alloy
+install opentelemetry collector for logs, trace and metrics
 ```
-
-helm upgrade --namespace lgtm-stack my-lgtm-grafana-alloy grafana/alloy -f grafana-alloy-values.yaml
 helm install my-opentelemetry-collector open-telemetry/opentelemetry-collector \
    --set image.repository="otel/opentelemetry-collector-k8s" \
    --set mode=statefulset
    
 helm upgrade my-opentelemetry-collector open-telemetry/opentelemetry-collector --values kubernetes/helm-otel-collector-values.yaml 
 ```
+
+For adding tracing export from otel collector, the tempo-distributor must be configured for the otlp. 
+Added configuration for otlp grpc and http to the configmap of tempo-distributor
 
 

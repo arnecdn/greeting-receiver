@@ -99,6 +99,10 @@ config:
       endpoint: my-lgtm-distributed-tempo-distributor.lgtm-stack.svc.cluster.local:4317
       tls:
         insecure: true
+    otlphttp/tempo:
+      endpoint: http://my-lgtm-distributed-tempo-distributor.lgtm-stack.svc.cluster.local:3100
+      tls:
+        insecure: true
     debug:
       verbosity: normal
   extensions:
