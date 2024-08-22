@@ -95,6 +95,13 @@ helm install my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed
 helm upgrade my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0
 helm uninstall my-lgtm-distributed grafana/lgtm-distributed -n lgtm-stack
 ```
+
+###Grafana Tempo
+Configuring Tempo.configmap-> replication_factor from 3 to one
+
+### Opentelemetry Collector
+https://opentelemetry.io/docs/collector/quick-start/
+
 install opentelemetry collector for logs, trace and metrics
 ```
 helm install my-opentelemetry-collector open-telemetry/opentelemetry-collector \
