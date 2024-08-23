@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use derive_more::{Display};
-
+use uuid::Uuid;
 
 #[async_trait]
 pub trait GreetingService: Sync + Send  {
@@ -50,7 +50,7 @@ pub enum ServiceError{
 
 #[derive( Clone,PartialEq, Debug)]
 pub struct Greeting{
-
+    pub (crate) id: String,
     pub(crate) to: String,
     pub(crate) from: String,
     pub(crate) heading: String,
@@ -58,10 +58,22 @@ pub struct Greeting{
     pub(crate) created: NaiveDateTime,
 }
 
-
+impl Greeting {
+    pub fn new(to: String, from: String, heading: String, message: String, time: NaiveDateTime) -> Greeting {
+        Greeting {
+            id: String::from(Uuid::now_v7()),
+            to,
+            from,
+            heading,
+            message,
+            created: time,
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use futures::executor::block_on;
+    use uuid::Uuid;
     use super::*;
 
     #[test]
@@ -69,7 +81,7 @@ mod tests {
         let  mock_repo = MockGreetingRepository::new();
         let mut service = GreetingServiceImpl::new(mock_repo);
 
-        let greeting = Greeting::new(String::from("John"), String::from("Jane"), String::from("Hello"), String::from("Hi John!"));
+        let greeting = Greeting::new(String::from("John"), String::from("Jane"), String::from("Hello"), String::from("Hi John!"), NaiveDateTime::default());
         let result = service.receive_greeting(greeting.clone());
         assert!(block_on(result).is_ok());
 
@@ -101,17 +113,7 @@ mod tests {
             Ok(())
         }
     }
-impl Greeting {
-    pub fn new(to: String, from: String, heading: String, message: String) -> Greeting {
-        Greeting {
-            to,
-            from,
-            heading,
-            message,
-            created: NaiveDateTime::default(),
-        }
-    }
-}
+
 }
 
 

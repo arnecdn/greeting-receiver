@@ -3,14 +3,18 @@ use std::time::Duration;
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use log::info;
+use opentelemetry::{Context, global};
+use opentelemetry::trace::TraceContextExt;
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{FutureProducer, FutureRecord, Producer};
 use rdkafka::ClientConfig;
+use rdkafka::message::{Header, OwnedHeaders};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use uuid::Uuid;
 
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
+use crate::HeaderInjector;
 use crate::settings::Kafka;
 
 pub struct KafkaGreetingRepository {
@@ -49,15 +53,24 @@ impl GreetingRepository for KafkaGreetingRepository {
     }
 
     async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
+        let context = Context::current();
+        let s = context.span();
+
         let msg = GreetingMessage::from(&greeting.clone());
         let x = serde_json::to_string(&msg).unwrap();
+        let mut headers = OwnedHeaders::new().insert(Header { key: "greeting_id", value: Some(&msg.id) });
+        //(1)
+        global::get_text_map_propagator(|propagator| {
+            //(2)
+            propagator.inject_context(&context, &mut HeaderInjector(&mut headers))
+        });
         self.producer
             .begin_transaction()
             .expect("Failed beginning transaction");
         info!("Sending msg id {}", msg.id);
         self.producer
             .send(
-                FutureRecord::to(&self.topic).payload(&x).key(&msg.id),
+                FutureRecord::to(&self.topic).headers(headers).payload(&x).key(&msg.id),
                 Duration::from_secs(5),
             )
             .await
@@ -88,7 +101,7 @@ pub struct GreetingMessage {
 impl From<&Greeting> for GreetingMessage {
     fn from(greeting: &Greeting) -> Self {
         GreetingMessage {
-            id: String::from(Uuid::now_v7()),
+            id: greeting.id.to_string(),
             to: greeting.to.to_string(),
             from: greeting.from.to_string(),
             heading: greeting.heading.to_string(),

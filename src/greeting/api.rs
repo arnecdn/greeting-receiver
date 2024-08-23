@@ -7,8 +7,9 @@ use actix_web::web::Data;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use derive_more::{Display};
-use opentelemetry::global;
-use opentelemetry::trace::{Span, SpanKind, Status, Tracer};
+use opentelemetry::{Context, global};
+use opentelemetry::trace::{Span, SpanKind, Status, TraceContextExt, Tracer};
+use rdkafka::message::{Header, OwnedHeaders};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
@@ -16,6 +17,7 @@ use validator_derive::Validate;
 
 use crate::greeting::api::ApiError::{ApplicationError, Applicationerror, BadClientData};
 use crate::greeting::service::{Greeting, GreetingService, ServiceError};
+use crate::{HeaderInjector};
 
 #[utoipa::path(
     get,
@@ -60,13 +62,19 @@ pub async fn greet(
         .start(&tracer);
 
     greeting.validate()?;
+    let mut headers = OwnedHeaders::new().insert(Header { key: "key", value: Some(&greeting.to) });
+
+    let context = Context::current_with_span(span);
+    global::get_text_map_propagator(|propagator| {
+        propagator.inject_context(&context, &mut HeaderInjector(&mut headers))
+    });
 
     if let Ok(mut guard) = data.write(){
-        guard.receive_greeting(Greeting::from(greeting.0)).await?;
-        span.set_status(Status::Ok);
+        guard.receive_greeting(greeting.0.into()).await?;
+//        span.set_status(Status::Ok);
         return Ok(HttpResponse::Ok().body(""));
     }
-    span.set_status(Status::error("Not able to handle data"));
+    //span.set_status(Status::error("Not able to handle data"));
     Err(Applicationerror)
 }
 
@@ -120,15 +128,16 @@ pub struct GreetingDto {
     created: DateTime<Utc>,
 }
 
-impl From<GreetingDto> for Greeting{
-    fn from(greeting: GreetingDto) -> Self {
-        Greeting{
-            to: greeting.to.clone(),
-            from: greeting.from.clone(),
-            heading: greeting.heading.clone(),
-            message: greeting.message.clone(),
-            created: greeting.created.naive_utc(),
-        }
+impl Into<Greeting> for GreetingDto{
+
+    fn into(self) -> Greeting {
+        Greeting::new(
+            self.to.clone(),
+            self.from.clone(),
+            self.heading.clone(),
+            self.message.clone(),
+            self.created.naive_utc(),
+        )
     }
 }
 impl From<Greeting> for GreetingDto {
