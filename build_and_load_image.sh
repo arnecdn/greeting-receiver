@@ -4,10 +4,11 @@
 if [ "$#" -ne 1 ]; then
   # Set default value for TAG if not provided
   TAG=${1:-0.1}
+else
+  TAG=$1
 fi
 
 
-TAG=$1
 
 # Validate TAG format (should be in the form of 'X.Y')
 if [[ ! $TAG =~ ^[0-9]+\.[0-9]+$ ]]; then

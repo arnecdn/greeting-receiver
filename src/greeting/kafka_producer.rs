@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use log::info;
 use opentelemetry::{Context, global};
-use opentelemetry::trace::TraceContextExt;
+use opentelemetry::trace::{Status, TraceContextExt};
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{FutureProducer, FutureRecord, Producer};
 use rdkafka::ClientConfig;
@@ -78,6 +78,8 @@ impl GreetingRepository for KafkaGreetingRepository {
         self.producer
             .commit_transaction(Duration::from_secs(5))
             .expect("Error comiting transaction");
+        context.span().set_status(Status::Ok);
+        context.span().end();
         Ok(())
     }
 }
