@@ -11,6 +11,7 @@ use rdkafka::ClientConfig;
 use rdkafka::message::{Header, OwnedHeaders};
 use serde::{Deserialize, Serialize};
 use serde_json;
+use tracing::Span;
 use uuid::Uuid;
 
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
@@ -52,22 +53,20 @@ impl GreetingRepository for KafkaGreetingRepository {
         panic!("Not implemented")
     }
 
-    async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
-        let context = Context::current();
-        let s = context.span();
-
+    async fn store(&mut self, greeting: Greeting, context: Context) -> Result<(), ServiceError> {
         let msg = GreetingMessage::from(&greeting.clone());
         let x = serde_json::to_string(&msg).unwrap();
+
         let mut headers = OwnedHeaders::new().insert(Header { key: "greeting_id", value: Some(&msg.id) });
-        //(1)
         global::get_text_map_propagator(|propagator| {
-            //(2)
             propagator.inject_context(&context, &mut HeaderInjector(&mut headers))
         });
+
         self.producer
             .begin_transaction()
             .expect("Failed beginning transaction");
         info!("Sending msg id {}", msg.id);
+
         self.producer
             .send(
                 FutureRecord::to(&self.topic).headers(headers).payload(&x).key(&msg.id),

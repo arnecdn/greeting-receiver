@@ -1,11 +1,13 @@
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use derive_more::{Display};
+use opentelemetry::Context;
+use opentelemetry_sdk::trace::Span;
 use uuid::Uuid;
 
 #[async_trait]
 pub trait GreetingService: Sync + Send  {
-     async fn receive_greeting(&mut self,  greeting: Greeting) -> Result<(), ServiceError>;
+     async fn receive_greeting(&mut self,  greeting: Greeting, context: Context) -> Result<(), ServiceError>;
     async fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError>;
 
 }
@@ -14,7 +16,7 @@ pub trait GreetingService: Sync + Send  {
 pub trait GreetingRepository: Sync + Send  {
     async fn all(&self) -> Result<Vec<Greeting>, ServiceError>;
 
-    async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError>;
+    async fn store(&mut self, greeting: Greeting, context: Context) -> Result<(), ServiceError>;
 }
 
 
@@ -33,8 +35,8 @@ impl <C:GreetingRepository+Sync + Send > GreetingServiceImpl<C> {
 
 #[async_trait]
 impl <C:GreetingRepository+  Sync + Send > GreetingService for GreetingServiceImpl<C>  {
-    async fn receive_greeting(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
-        self.repo.store(greeting).await
+    async fn receive_greeting(&mut self, greeting: Greeting, context: Context) -> Result<(), ServiceError> {
+        self.repo.store(greeting, context).await
     }
 
     async fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError> {
@@ -73,6 +75,7 @@ impl Greeting {
 #[cfg(test)]
 mod tests {
     use futures::executor::block_on;
+    use opentelemetry::trace::TraceContextExt;
     use uuid::Uuid;
     use super::*;
 
@@ -82,7 +85,8 @@ mod tests {
         let mut service = GreetingServiceImpl::new(mock_repo);
 
         let greeting = Greeting::new(String::from("John"), String::from("Jane"), String::from("Hello"), String::from("Hi John!"), NaiveDateTime::default());
-        let result = service.receive_greeting(greeting.clone());
+
+        let result = service.receive_greeting(greeting.clone(), Context::new());
         assert!(block_on(result).is_ok());
 
         let all_result = service.all_greetings();
@@ -107,7 +111,7 @@ mod tests {
             Ok(self.greetings.clone())
         }
 
-        async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
+        async fn store(&mut self, greeting: Greeting, context: Context) -> Result<(), ServiceError> {
             let  repo = &mut self.greetings;
             repo.push(greeting);
             Ok(())

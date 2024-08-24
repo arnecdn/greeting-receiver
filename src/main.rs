@@ -48,6 +48,7 @@ async fn main() -> std::io::Result<()> {
     let result = init_tracer_provider(&app_config.otel_collector.oltp_endpoint);
     let tracer_provider = result.unwrap();
     global::set_tracer_provider(tracer_provider.clone());
+    global::set_text_map_propagator(TraceContextPropagator::new());
 
     // Initialize logs and save the logger_provider.
     let logger_provider = init_logs(&app_config.otel_collector.oltp_endpoint).unwrap();
@@ -121,7 +122,8 @@ fn init_tracer_provider(otlp_endpoint: &str) -> Result<TracerProvider, TraceErro
         )
         .with_trace_config(Config::default().with_resource(RESOURCE.clone()))
         .install_batch(runtime::Tokio)
-}    //(1)
+}
+
 pub struct HeaderInjector<'a>(pub &'a mut OwnedHeaders);
 
 impl <'a>Injector for HeaderInjector<'a> {

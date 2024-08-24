@@ -11,6 +11,7 @@ use opentelemetry::{Context, global};
 use opentelemetry::trace::{Span, SpanKind, Status, TraceContextExt, Tracer};
 use rdkafka::message::{Header, OwnedHeaders};
 use serde::{Deserialize, Serialize};
+use tracing::span;
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;
@@ -54,27 +55,22 @@ pub async fn greet(
     data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
-    let tracer = global::tracer("greeting");
-
-    let mut span = tracer
-        .span_builder(format!("{} {}", "POST", "/greeting"))
-        .with_kind(SpanKind::Server)
-        .start(&tracer);
 
     greeting.validate()?;
-    let mut headers = OwnedHeaders::new().insert(Header { key: "key", value: Some(&greeting.to) });
-
-    let context = Context::current_with_span(span);
-    global::get_text_map_propagator(|propagator| {
-        propagator.inject_context(&context, &mut HeaderInjector(&mut headers))
-    });
 
     if let Ok(mut guard) = data.write(){
-        guard.receive_greeting(greeting.0.into()).await?;
-//        span.set_status(Status::Ok);
+        let tracer = global::tracer("greeting_producer");
+
+        let mut span = tracer
+            .span_builder("greeting_producer_span")
+            .with_kind(SpanKind::Server)
+            .start(&tracer);
+
+        let context = Context::current_with_span(span);
+
+        guard.receive_greeting(greeting.0.into(), context).await?;
         return Ok(HttpResponse::Ok().body(""));
     }
-    //span.set_status(Status::error("Not able to handle data"));
     Err(Applicationerror)
 }
 
@@ -235,7 +231,7 @@ struct GreetingSvcStub ;
 #[async_trait]
 impl GreetingService for GreetingSvcStub {
 
-    async fn receive_greeting(&mut self, _: Greeting) -> Result<(), ServiceError>{
+    async fn receive_greeting(&mut self, _: Greeting, context: Context) -> Result<(), ServiceError>{
         Ok(())
     }
     async fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError>{
