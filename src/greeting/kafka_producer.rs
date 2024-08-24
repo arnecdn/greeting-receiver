@@ -15,7 +15,7 @@ use tracing::Span;
 use uuid::Uuid;
 
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
-use crate::HeaderInjector;
+use crate::observation::HeaderInjector;
 use crate::settings::Kafka;
 
 pub struct KafkaGreetingRepository {

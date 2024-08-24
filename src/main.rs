@@ -32,6 +32,7 @@ use crate::greeting::service::GreetingService;
 
 mod greeting;
 mod settings;
+mod observation;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -45,13 +46,13 @@ async fn main() -> std::io::Result<()> {
     struct ApiDoc;
     let app_config = Settings::new();
 
-    let result = init_tracer_provider(&app_config.otel_collector.oltp_endpoint);
+    let result = observation::init_tracer_provider(&app_config.otel_collector.oltp_endpoint);
     let tracer_provider = result.unwrap();
     global::set_tracer_provider(tracer_provider.clone());
     global::set_text_map_propagator(TraceContextPropagator::new());
 
     // Initialize logs and save the logger_provider.
-    let logger_provider = init_logs(&app_config.otel_collector.oltp_endpoint).unwrap();
+    let logger_provider = observation::init_logs(&app_config.otel_collector.oltp_endpoint).unwrap();
 
     // Create a new OpenTelemetryTracingBridge using the above LoggerProvider.
     let layer = OpenTelemetryTracingBridge::new(&logger_provider);
@@ -90,54 +91,4 @@ async fn main() -> std::io::Result<()> {
     global::shutdown_tracer_provider();
     logger_provider.shutdown().expect("Failed shutting down loggprovider");
     Ok(())
-}
-static RESOURCE: Lazy<Resource> = Lazy::new(|| {
-    Resource::new(vec![KeyValue::new(
-        opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-        "greeting_rust",
-    )])
-});
-
-fn init_logs(otlp_endpoint: &str) -> Result<LoggerProvider, LogError> {
-    opentelemetry_otlp::new_pipeline()
-        .logging()
-        .with_resource(RESOURCE.clone())
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_endpoint(otlp_endpoint),
-        )
-        .install_batch(runtime::Tokio)
-}
-
-fn init_tracer_provider(otlp_endpoint: &str) -> Result<TracerProvider, TraceError> {
-    global::set_text_map_propagator(TraceContextPropagator::new());
-
-    opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_endpoint(otlp_endpoint),
-        )
-        .with_trace_config(Config::default().with_resource(RESOURCE.clone()))
-        .install_batch(runtime::Tokio)
-}
-
-pub struct HeaderInjector<'a>(pub &'a mut OwnedHeaders);
-
-impl <'a>Injector for HeaderInjector<'a> {
-    fn set(&mut self, key: &str, value: String) {
-        let mut new = OwnedHeaders::new().insert(rdkafka::message::Header {
-            key,
-            value: Some(&value),
-        });
-
-        for header in self.0.iter() {
-            let s = String::from_utf8(header.value.unwrap().to_vec()).unwrap();
-            new = new.insert(rdkafka::message::Header { key: header.key, value: Some(&s) });
-        }
-
-        self.0.clone_from(&new);
-    }
 }

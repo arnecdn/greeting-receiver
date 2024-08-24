@@ -18,7 +18,6 @@ use validator_derive::Validate;
 
 use crate::greeting::api::ApiError::{ApplicationError, Applicationerror, BadClientData};
 use crate::greeting::service::{Greeting, GreetingService, ServiceError};
-use crate::{HeaderInjector};
 
 #[utoipa::path(
     get,
