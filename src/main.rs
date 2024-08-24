@@ -5,20 +5,12 @@ use actix_web::{App, HttpServer};
 
 use actix_web::web::Data;
 
-use log::{error, info, Level};
-use once_cell::sync::Lazy;
-use opentelemetry::{global, KeyValue};
-use opentelemetry::logs::LogError;
-use opentelemetry::propagation::Injector;
-use opentelemetry::trace::TraceError;
+use log::{error, info};
+
+use opentelemetry::{global};
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::logs::LoggerProvider;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
-use opentelemetry_sdk::{Resource, runtime};
-use opentelemetry_sdk::trace::{Config, TracerProvider};
-use opentelemetry_semantic_conventions::resource::SERVICE_NAME;
-use rdkafka::message::{Headers, OwnedHeaders};
+
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use utoipa::OpenApi;

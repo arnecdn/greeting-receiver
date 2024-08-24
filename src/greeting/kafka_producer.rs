@@ -11,8 +11,8 @@ use rdkafka::ClientConfig;
 use rdkafka::message::{Header, OwnedHeaders};
 use serde::{Deserialize, Serialize};
 use serde_json;
-use tracing::Span;
-use uuid::Uuid;
+
+
 
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
 use crate::observation::HeaderInjector;

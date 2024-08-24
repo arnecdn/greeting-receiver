@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use derive_more::{Display};
 use opentelemetry::Context;
-use opentelemetry_sdk::trace::Span;
+
 use uuid::Uuid;
 
 #[async_trait]

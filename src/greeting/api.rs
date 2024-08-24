@@ -8,10 +8,10 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use derive_more::{Display};
 use opentelemetry::{Context, global};
-use opentelemetry::trace::{Span, SpanKind, Status, TraceContextExt, Tracer};
-use rdkafka::message::{Header, OwnedHeaders};
+use opentelemetry::trace::{SpanKind, TraceContextExt, Tracer};
+
 use serde::{Deserialize, Serialize};
-use tracing::span;
+
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;
@@ -60,7 +60,7 @@ pub async fn greet(
     if let Ok(mut guard) = data.write(){
         let tracer = global::tracer("greeting_producer");
 
-        let mut span = tracer
+        let span = tracer
             .span_builder("greeting_producer_span")
             .with_kind(SpanKind::Server)
             .start(&tracer);
@@ -230,7 +230,7 @@ struct GreetingSvcStub ;
 #[async_trait]
 impl GreetingService for GreetingSvcStub {
 
-    async fn receive_greeting(&mut self, _: Greeting, context: Context) -> Result<(), ServiceError>{
+    async fn receive_greeting(&mut self, _: Greeting, _context: Context) -> Result<(), ServiceError>{
         Ok(())
     }
     async fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError>{
