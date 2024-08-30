@@ -4,18 +4,15 @@ use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use log::info;
 use opentelemetry::{Context, global};
-use opentelemetry::trace::{Status, TraceContextExt};
+use opentelemetry::trace::{ Status, TraceContextExt};
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{FutureProducer, FutureRecord, Producer};
 use rdkafka::ClientConfig;
 use rdkafka::message::{Header, OwnedHeaders};
 use serde::{Deserialize, Serialize};
 use serde_json;
-
-
-
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
-use crate::observation::HeaderInjector;
+use crate::open_telemetry::HeaderInjector;
 use crate::settings::Kafka;
 
 pub struct KafkaGreetingRepository {
@@ -61,6 +58,7 @@ impl GreetingRepository for KafkaGreetingRepository {
         global::get_text_map_propagator(|propagator| {
             propagator.inject_context(&context, &mut HeaderInjector(&mut headers))
         });
+
 
         self.producer
             .begin_transaction()

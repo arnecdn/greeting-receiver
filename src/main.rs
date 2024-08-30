@@ -4,10 +4,10 @@ use std::sync::RwLock;
 use actix_web::{App, HttpServer};
 
 use actix_web::web::Data;
-
 use log::{error, info};
 
 use opentelemetry::{global};
+use opentelemetry::trace::TracerProvider;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 
@@ -21,10 +21,11 @@ use settings::Settings;
 
 use crate::greeting::kafka_producer::KafkaGreetingRepository;
 use crate::greeting::service::GreetingService;
+use crate::open_telemetry::init_metrics;
 
 mod greeting;
 mod settings;
-mod observation;
+mod open_telemetry;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -38,19 +39,26 @@ async fn main() -> std::io::Result<()> {
     struct ApiDoc;
     let app_config = Settings::new();
 
-    let result = observation::init_tracer_provider(&app_config.otel_collector.oltp_endpoint);
+    let result = open_telemetry::init_tracer_provider(&app_config.otel_collector.oltp_endpoint);
     let tracer_provider = result.unwrap();
     global::set_tracer_provider(tracer_provider.clone());
     global::set_text_map_propagator(TraceContextPropagator::new());
+    // Create a tracing layer with the configured tracer
+    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer_provider.tracer("greeting_rust"));
 
     // Initialize logs and save the logger_provider.
-    let logger_provider = observation::init_logs(&app_config.otel_collector.oltp_endpoint).unwrap();
+    let logger_provider = open_telemetry::init_logs(&app_config.otel_collector.oltp_endpoint).unwrap();
 
     // Create a new OpenTelemetryTracingBridge using the above LoggerProvider.
     let layer = OpenTelemetryTracingBridge::new(&logger_provider);
     tracing_subscriber::registry()
         .with(layer)
+        .with(telemetry)
         .init();
+
+    let meter_provider = init_metrics(&app_config.otel_collector.oltp_endpoint).expect("Failed initializing metrics");
+
+    global::set_meter_provider(meter_provider.clone());
 
     info!("Starting server");
 
@@ -72,6 +80,8 @@ async fn main() -> std::io::Result<()> {
             .app_data(svc.clone())
             .service(api::greet)
             .service(api::list_greetings)
+            //.wrap(RequestTracing::default())
+            //.wrap(RequestMetrics::default())
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}")
                     .url("/api-docs/openapi.json", ApiDoc::openapi()),
@@ -82,5 +92,6 @@ async fn main() -> std::io::Result<()> {
         .await.expect("Error stopping server");
     global::shutdown_tracer_provider();
     logger_provider.shutdown().expect("Failed shutting down loggprovider");
+    meter_provider.shutdown().expect("Problems shutting down meter provider");
     Ok(())
 }

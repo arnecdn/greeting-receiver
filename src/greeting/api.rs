@@ -7,11 +7,13 @@ use actix_web::web::Data;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use derive_more::{Display};
-use opentelemetry::{Context, global};
-use opentelemetry::trace::{SpanKind, TraceContextExt, Tracer};
+use log::info;
+use opentelemetry::{Context};
+
 
 use serde::{Deserialize, Serialize};
-
+use tracing::{ span};
+use tracing_core::Level;
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;
@@ -50,24 +52,18 @@ pub  async fn  list_greetings(
     ),
     )]
 #[post("/greeting")]
+//#[instrument(name="greeting_rust_receive")]
 pub async fn greet(
     data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
-
+    let span = span!(Level::INFO, "greeting_rust_receive");
+    let _enter = span.enter();
     greeting.validate()?;
 
     if let Ok(mut guard) = data.write(){
-        let tracer = global::tracer("greeting_producer");
-
-        let span = tracer
-            .span_builder("greeting_producer_span")
-            .with_kind(SpanKind::Server)
-            .start(&tracer);
-
-        let context = Context::current_with_span(span);
-
-        guard.receive_greeting(greeting.0.into(), context).await?;
+        info!("Received greeting {}", &greeting.0.heading);
+        guard.receive_greeting(greeting.0.into(), Context::current()).await?;
         return Ok(HttpResponse::Ok().body(""));
     }
     Err(Applicationerror)
@@ -225,7 +221,7 @@ mod test {
         println!("{:?}", resp.response().body());
     }
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct GreetingSvcStub ;
 #[async_trait]
 impl GreetingService for GreetingSvcStub {

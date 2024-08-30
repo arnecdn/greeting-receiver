@@ -1,9 +1,10 @@
 use once_cell::sync::Lazy;
 use opentelemetry::{global, KeyValue};
 use opentelemetry::logs::LogError;
+use opentelemetry::metrics::MetricsError;
 use opentelemetry::propagation::Injector;
 use opentelemetry::trace::TraceError;
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{ExportConfig, WithExportConfig};
 use opentelemetry_sdk::logs::LoggerProvider;
 use opentelemetry_sdk::{Resource, runtime};
 use opentelemetry_sdk::propagation::TraceContextPropagator;
@@ -18,9 +19,11 @@ static RESOURCE: Lazy<Resource> = Lazy::new(|| {
 });
 
 pub(crate) fn init_logs(otlp_endpoint: &str) -> Result<LoggerProvider, LogError> {
+
     opentelemetry_otlp::new_pipeline()
         .logging()
         .with_resource(RESOURCE.clone())
+
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
@@ -34,15 +37,31 @@ pub(crate) fn init_tracer_provider(otlp_endpoint: &str) -> Result<TracerProvider
 
     opentelemetry_otlp::new_pipeline()
         .tracing()
+
         .with_exporter(
             opentelemetry_otlp::new_exporter()
+
                 .tonic()
                 .with_endpoint(otlp_endpoint),
         )
         .with_trace_config(Config::default().with_resource(RESOURCE.clone()))
         .install_batch(runtime::Tokio)
 }
-
+pub(crate) fn init_metrics(otlp_endpoint: &str) -> Result<opentelemetry_sdk::metrics::SdkMeterProvider, MetricsError> {
+    let export_config = ExportConfig {
+        endpoint: otlp_endpoint.parse().unwrap(),
+        ..ExportConfig::default()
+    };
+    opentelemetry_otlp::new_pipeline()
+        .metrics(runtime::Tokio)
+        .with_exporter(
+            opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_export_config(export_config),
+        )
+        .with_resource(RESOURCE.clone())
+        .build()
+}
 pub struct HeaderInjector<'a>(pub &'a mut OwnedHeaders);
 
 impl <'a>Injector for HeaderInjector<'a> {
