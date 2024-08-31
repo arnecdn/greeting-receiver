@@ -9,12 +9,11 @@ use log::{error, info};
 use opentelemetry::{global};
 use opentelemetry::trace::TracerProvider;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_sdk::logs::{Logger, LoggerProvider};
+
 use opentelemetry_sdk::propagation::TraceContextPropagator;
-use opentelemetry_sdk::trace::Tracer;
-use tracing_opentelemetry::OpenTelemetryLayer;
-use tracing_subscriber::layer::{Layered, SubscriberExt};
-use tracing_subscriber::{EnvFilter, Registry};
+
+use tracing_subscriber::layer::{ SubscriberExt};
+use tracing_subscriber::{EnvFilter};
 use tracing_subscriber::util::SubscriberInitExt;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;

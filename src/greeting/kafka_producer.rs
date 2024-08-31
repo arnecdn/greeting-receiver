@@ -3,7 +3,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use log::info;
-use opentelemetry::{Context, global};
+use opentelemetry::{ global};
 use opentelemetry::trace::{ Status, TraceContextExt};
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{FutureProducer, FutureRecord, Producer};
@@ -11,6 +11,8 @@ use rdkafka::ClientConfig;
 use rdkafka::message::{Header, OwnedHeaders};
 use serde::{Deserialize, Serialize};
 use serde_json;
+use tracing::Span;
+use tracing_opentelemetry::OpenTelemetrySpanExt;
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
 use crate::open_telemetry::HeaderInjector;
 use crate::settings::Kafka;
@@ -50,15 +52,16 @@ impl GreetingRepository for KafkaGreetingRepository {
         panic!("Not implemented")
     }
 
-    async fn store(&mut self, greeting: Greeting, context: Context) -> Result<(), ServiceError> {
+    async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
         let msg = GreetingMessage::from(&greeting.clone());
         let x = serde_json::to_string(&msg).unwrap();
+        let parent_context = Span::current().context();
 
         let mut headers = OwnedHeaders::new().insert(Header { key: "greeting_id", value: Some(&msg.id) });
-        global::get_text_map_propagator(|propagator| {
-            propagator.inject_context(&context, &mut HeaderInjector(&mut headers))
-        });
 
+        global::get_text_map_propagator(|propagator| {
+            propagator.inject_context(&parent_context, &mut HeaderInjector(&mut headers))
+        });
 
         self.producer
             .begin_transaction()
@@ -76,8 +79,8 @@ impl GreetingRepository for KafkaGreetingRepository {
         self.producer
             .commit_transaction(Duration::from_secs(5))
             .expect("Error comiting transaction");
-        context.span().set_status(Status::Ok);
-        context.span().end();
+        parent_context.span().set_status(Status::Ok);
+        parent_context.span().end();
         Ok(())
     }
 }

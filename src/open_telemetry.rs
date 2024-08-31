@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use opentelemetry::{global, KeyValue};
+use opentelemetry::{ KeyValue};
 use opentelemetry::logs::LogError;
 use opentelemetry::metrics::MetricsError;
 use opentelemetry::propagation::Injector;
@@ -7,7 +7,6 @@ use opentelemetry::trace::TraceError;
 use opentelemetry_otlp::{ExportConfig, WithExportConfig};
 use opentelemetry_sdk::logs::LoggerProvider;
 use opentelemetry_sdk::{Resource, runtime};
-use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::trace::{Config, TracerProvider};
 use rdkafka::message::{Headers, OwnedHeaders};
 

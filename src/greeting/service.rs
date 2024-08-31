@@ -2,7 +2,6 @@ use std::fmt::{Debug, Formatter};
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use derive_more::Display;
-use opentelemetry::Context;
 
 use uuid::Uuid;
 
@@ -11,7 +10,6 @@ pub trait GreetingService: Sync + Send + Debug {
     async fn receive_greeting(
         &mut self,
         greeting: Greeting,
-        context: Context,
     ) -> Result<(), ServiceError>;
     async fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError>;
 }
@@ -20,7 +18,7 @@ pub trait GreetingService: Sync + Send + Debug {
 pub trait GreetingRepository: Sync + Send {
     async fn all(&self) -> Result<Vec<Greeting>, ServiceError>;
 
-    async fn store(&mut self, greeting: Greeting, context: Context) -> Result<(), ServiceError>;
+    async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError>;
 }
 
 pub struct GreetingServiceImpl<C> {
@@ -44,9 +42,8 @@ impl<C: GreetingRepository + Sync + Send> GreetingService for GreetingServiceImp
     async fn receive_greeting(
         &mut self,
         greeting: Greeting,
-        context: Context,
     ) -> Result<(), ServiceError> {
-        self.repo.store(greeting, context).await
+        self.repo.store(greeting).await
     }
 
     async fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError> {
@@ -134,7 +131,6 @@ mod tests {
         async fn store(
             &mut self,
             greeting: Greeting,
-            context: Context,
         ) -> Result<(), ServiceError> {
             let repo = &mut self.greetings;
             repo.push(greeting);
