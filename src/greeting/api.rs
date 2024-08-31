@@ -12,7 +12,7 @@ use opentelemetry::{Context};
 
 
 use serde::{Deserialize, Serialize};
-use tracing::{ span};
+use tracing::{instrument, span};
 use tracing_core::Level;
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
@@ -52,7 +52,7 @@ pub  async fn  list_greetings(
     ),
     )]
 #[post("/greeting")]
-//#[instrument(name="greeting_rust_receive")]
+#[instrument(name="greeting_rust_receive")]
 pub async fn greet(
     data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
     greeting: web::Json<GreetingDto>,

@@ -33,7 +33,7 @@ pub(crate) fn init_logs(otlp_endpoint: &str) -> Result<LoggerProvider, LogError>
 }
 
 pub(crate) fn init_tracer_provider(otlp_endpoint: &str) -> Result<TracerProvider, TraceError> {
-    global::set_text_map_propagator(TraceContextPropagator::new());
+    // global::set_text_map_propagator(TraceContextPropagator::new());
 
     opentelemetry_otlp::new_pipeline()
         .tracing()

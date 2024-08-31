@@ -9,9 +9,12 @@ use log::{error, info};
 use opentelemetry::{global};
 use opentelemetry::trace::TracerProvider;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
+use opentelemetry_sdk::logs::{Logger, LoggerProvider};
 use opentelemetry_sdk::propagation::TraceContextPropagator;
-
-use tracing_subscriber::layer::SubscriberExt;
+use opentelemetry_sdk::trace::Tracer;
+use tracing_opentelemetry::OpenTelemetryLayer;
+use tracing_subscriber::layer::{Layered, SubscriberExt};
+use tracing_subscriber::{EnvFilter, Registry};
 use tracing_subscriber::util::SubscriberInitExt;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
@@ -44,15 +47,23 @@ async fn main() -> std::io::Result<()> {
     global::set_tracer_provider(tracer_provider.clone());
     global::set_text_map_propagator(TraceContextPropagator::new());
     // Create a tracing layer with the configured tracer
-    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer_provider.tracer("greeting_rust"));
+    let telemetry= tracing_opentelemetry::layer().
+        with_tracer(tracer_provider.tracer("greeting_rust"));
 
     // Initialize logs and save the logger_provider.
     let logger_provider = open_telemetry::init_logs(&app_config.otel_collector.oltp_endpoint).unwrap();
 
     // Create a new OpenTelemetryTracingBridge using the above LoggerProvider.
     let layer = OpenTelemetryTracingBridge::new(&logger_provider);
+    let filter = EnvFilter::new("info")
+        .add_directive("hyper=info".parse().unwrap())
+        .add_directive("h2=info".parse().unwrap())
+        .add_directive("tonic=info".parse().unwrap())
+        .add_directive("reqwest=info".parse().unwrap());
+
     tracing_subscriber::registry()
         .with(layer)
+        .with(filter)
         .with(telemetry)
         .init();
 
