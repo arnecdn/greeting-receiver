@@ -43,17 +43,17 @@ async fn main() -> std::io::Result<()> {
 
     let result = open_telemetry::init_tracer_provider(&app_config.otel_collector.oltp_endpoint);
     let tracer_provider = result.unwrap();
-    global::set_tracer_provider(tracer_provider.clone());
     global::set_text_map_propagator(TraceContextPropagator::new());
+
     // Create a tracing layer with the configured tracer
-    let telemetry= tracing_opentelemetry::layer().
+    let tracer_layer = tracing_opentelemetry::layer().
         with_tracer(tracer_provider.tracer("greeting_rust"));
 
     // Initialize logs and save the logger_provider.
     let logger_provider = open_telemetry::init_logs(&app_config.otel_collector.oltp_endpoint).unwrap();
-
     // Create a new OpenTelemetryTracingBridge using the above LoggerProvider.
-    let layer = OpenTelemetryTracingBridge::new(&logger_provider);
+    let logger_layer = OpenTelemetryTracingBridge::new(&logger_provider);
+
     let filter = EnvFilter::new("info")
         .add_directive("hyper=info".parse().unwrap())
         .add_directive("h2=info".parse().unwrap())
@@ -61,14 +61,13 @@ async fn main() -> std::io::Result<()> {
         .add_directive("reqwest=info".parse().unwrap());
 
     tracing_subscriber::registry()
-        .with(layer)
+        .with(logger_layer)
         .with(filter)
-        .with(telemetry)
+        .with(tracer_layer)
         .init();
 
     let meter_provider = init_metrics(&app_config.otel_collector.oltp_endpoint).expect("Failed initializing metrics");
-
-    global::set_meter_provider(meter_provider.clone());
+    global::set_meter_provider(meter_provider);
 
     info!("Starting server");
 
@@ -102,6 +101,6 @@ async fn main() -> std::io::Result<()> {
         .await.expect("Error stopping server");
     global::shutdown_tracer_provider();
     logger_provider.shutdown().expect("Failed shutting down loggprovider");
-    meter_provider.shutdown().expect("Problems shutting down meter provider");
+    // meter_provider.shutdown().expect("Problems shutting down meter provider");
     Ok(())
 }
