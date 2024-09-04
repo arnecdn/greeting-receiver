@@ -66,8 +66,8 @@ async fn main() -> std::io::Result<()> {
         .with(tracer_layer)
         .init();
 
-    let meter_provider = init_metrics(&app_config.otel_collector.oltp_endpoint).expect("Failed initializing metrics");
-    global::set_meter_provider(meter_provider);
+    // let meter_provider = init_metrics(&app_config.otel_collector.oltp_endpoint).expect("Failed initializing metrics");
+    // global::set_meter_provider(meter_provider);
 
     info!("Starting server");
 
