@@ -105,6 +105,19 @@ config:
         insecure: true
     debug:
       verbosity: normal
+    prometheusremotewrite:
+      endpoint: http://my-lgtm-distributed-mimir-distributor.lgtm-stack.svc.cluster.local:8080/api/v1/push
+      tls:
+        insecure: true
+      headers:
+        X-Scope-OrgID: "greeting"
+    otlphttp:
+      endpoint: http://my-lgtm-distributed-mimir-distributor.lgtm-stack.svc.cluster.local:8080/otlp
+      headers:
+        X-Scope-OrgID: "greeting"
+      tls:
+        insecure: true
+
   extensions:
     # The health_check extension is mandatory for this chart.
     # Without the health_check extension the collector will fail the readiness and liveliness probes.
@@ -165,6 +178,7 @@ config:
       metrics:
         exporters:
           - debug
+          - otlphttp
         processors:
           - memory_limiter
           - batch

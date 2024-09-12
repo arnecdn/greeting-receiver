@@ -56,11 +56,11 @@ pub async fn greet(
     data: Data< RwLock<Box<dyn GreetingService+ Sync + Send >>>,
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
-    // let meter = global::meter("greeting_rust_receive_histogram");
-    // let histogram = meter
-    //     .f64_histogram("greeting_rust_receive_histogram")
-    //     .with_description("My greeting_rust_receive_histogram example description")
-    //     .init();
+    let meter = global::meter("greeting_rust_receive_histogram");
+    let histogram = meter
+        .f64_histogram("greeting_rust_receive_histogram")
+        .with_description("My greeting_rust_receive_histogram example description")
+        .init();
 
     let start = Instant::now();
 
@@ -69,17 +69,16 @@ pub async fn greet(
     if let Ok(mut guard) = data.write(){
         info!("Received greeting {}", &greeting.0.heading);
         guard.receive_greeting(greeting.0.into()).await?;
-        // let delta = start.elapsed();
+        let delta = start.elapsed();
 
         // histogram!("greeting_rust_receive_metric").record(delta);
 
-        // Record measurements using the histogram instrument.
-        // histogram.record(
-        //     10.5,
-        //     &[
-        //         KeyValue::new("delta", delta.as_nanos().to_string())
-        //     ],
-        // );
+        histogram.record(
+            10.5,
+            &[
+                KeyValue::new("delta", delta.as_nanos().to_string())
+            ],
+        );
 
         return Ok(HttpResponse::Ok().body(""));
     }

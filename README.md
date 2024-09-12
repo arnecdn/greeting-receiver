@@ -93,7 +93,13 @@ install LGTM stack
 ```
 helm install my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0 --create-namespace
 helm upgrade my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0
-helm uninstall my-lgtm-distributed grafana/lgtm-distributed -n lgtm-stack
+helm uninstall my-lgtm-distributed grafana/lgtm-distributed -n lgtm-
+
+
+helm upgrade my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --values kubernetes/helm-my-lgtm-stack-values.yaml
+helm install my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0 --values kubernetes/helm-my-lgtm-stack-values.yaml
+helm -n lgtm-stack diff upgrade my-lgtm-distributed grafana/lgtm-distributed -f kubernetes/helm-my-lgtm-stack-values.yaml
+
 ```
 
 ###Grafana Tempo
