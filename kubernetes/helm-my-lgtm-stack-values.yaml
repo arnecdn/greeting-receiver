@@ -4901,7 +4901,7 @@ tempo:
       flush_check_period: null
       max_block_bytes: null
       max_block_duration: null
-      replication_factor: 3
+      replication_factor: 1
       trace_idle_period: null
     extraArgs: []
     extraEnv: []
@@ -5482,7 +5482,7 @@ tempo:
       grpc:
         enabled: true
         receiverConfig: {
-          endpoint: localhost:4317
+#          endpoint: localhost:4317
         }
       http:
         enabled: false
