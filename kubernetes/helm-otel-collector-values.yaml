@@ -117,7 +117,12 @@ config:
         X-Scope-OrgID: "greeting"
       tls:
         insecure: true
-
+    otlphttp/metrics:
+      endpoint: http://my-lgtm-distributed-mimir-distributor.lgtm-stack.svc.cluster.local:8080/otlp
+      headers:
+        X-Scope-OrgID: "greeting"
+      tls:
+        insecure: true
   extensions:
     # The health_check extension is mandatory for this chart.
     # Without the health_check extension the collector will fail the readiness and liveliness probes.
@@ -161,6 +166,10 @@ config:
       endpoint: ${env:MY_POD_IP}:9411
   service:
     telemetry:
+      logs:
+        level: DEBUG
+        error_output_paths: stdout
+
       metrics:
         address: ${env:MY_POD_IP}:8888
     extensions:
@@ -178,7 +187,7 @@ config:
       metrics:
         exporters:
           - debug
-          - otlphttp
+          - prometheusremotewrite
         processors:
           - memory_limiter
           - batch

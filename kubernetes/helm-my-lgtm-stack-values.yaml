@@ -1885,6 +1885,8 @@ mimir:
     terminationGracePeriodSeconds: 30
     tolerations: []
   distributor:
+    validation:
+      max-native-histogram-buckets: 160
     affinity: {}
     annotations: {}
     containerSecurityContext:
@@ -2466,6 +2468,7 @@ mimir:
     tolerations: []
     topologySpreadConstraints: {}
   ingester:
+    native-histograms-ingestion-enabled: true
     affinity: {}
     annotations: {}
     containerSecurityContext:
