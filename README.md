@@ -1,22 +1,10 @@
 # Greeting app in Rust
 This is a simple sample app implementing a service for receiving greetings and storing them in a kafka topic.
 
-
 It implements an API for receiving and listing greetings. 
 The service publishes events from new greetings downstream for consumers. 
 
 
-
-Minikube
-configure zookeper for minikube based on article:https://gsfl3101.medium.com/kafka-raft-kraft-cluster-configuration-from-dev-to-prod-part-1-8a844fabf804
-```
-kubectl apply -f kubernetes/kafka-zookeeper.yaml
-kubectl apply -f kubernetes/kafka.yaml
-
-kubectl delete -n default deployment kafka-deployment-1
-kubectl delete -n default deployment kafka-deployment-2
-kubectl delete -n default service kafka-service
-```
 
 # Building docker image
 In order to build a dockerimage, the following init was done. 
@@ -72,52 +60,10 @@ Further deployment includes installing additional services on Minikube as Kafka,
 The specs are stored in ./kubernetes/ folder and can be deployed as a unit.
 Make sure the image of rust-docker is available for minikube. See section over. 
 ```
-kubectl apply -f kubernetes/kafka.yaml
-
 kubectl apply -f kubernetes/greeting-rust.yaml
-
-kubectl exec -it kafka-0 -- bash
-kafka-topics --create --topic greetings --replication-factor 1 --bootstrap-server kafka-0:9092
-kafka-topics --create --topic greetings --replication-factor 3 --partitions 10 --bootstrap-server kafka-0:9092
-kafka-topics --create --topic greetings --partitions 10 --bootstrap-server kafka-0:9092
-
-kafka-topics --bootstrap-server kafka-0:9092 --topic greetings --describe
 ```
 
 
-### Observability
-Observability is implemented based on OpenTelemetry.
-Further documentation to 
-install LGTM stack
 
-```
-helm install my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0 --create-namespace
-helm upgrade my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0
-helm uninstall my-lgtm-distributed grafana/lgtm-distributed -n lgtm-stack
-
-
-helm upgrade my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --values kubernetes/helm-my-lgtm-stack-values.yaml
-helm install my-lgtm-distributed --namespace=lgtm-stack grafana/lgtm-distributed --version 2.1.0 --values kubernetes/helm-my-lgtm-stack-values.yaml
-helm -n lgtm-stack diff upgrade my-lgtm-distributed grafana/lgtm-distributed -f kubernetes/helm-my-lgtm-stack-values.yaml
-
-```
-
-###Grafana Tempo
-Configuring Tempo.configmap-> replication_factor from 3 to one
-
-### Opentelemetry Collector
-https://opentelemetry.io/docs/collector/quick-start/
-
-install opentelemetry collector for logs, trace and metrics
-```
-helm install my-opentelemetry-collector open-telemetry/opentelemetry-collector \
-   --set image.repository="otel/opentelemetry-collector-k8s" \
-   --set mode=statefulset
-   
-helm upgrade my-opentelemetry-collector open-telemetry/opentelemetry-collector --values kubernetes/helm-otel-collector-values.yaml 
-```
-
-For adding tracing export from otel collector, the tempo-distributor must be configured for the otlp. 
-Added configuration for otlp grpc and http to the configmap of tempo-distributor
 
 
