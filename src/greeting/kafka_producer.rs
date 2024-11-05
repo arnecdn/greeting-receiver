@@ -70,7 +70,7 @@ impl GreetingRepository for KafkaGreetingRepository {
 
         self.producer
             .send(
-                FutureRecord::to(&self.topic).headers(headers).payload(&x).key(&msg.id),
+                FutureRecord::to(&self.topic).headers(headers).payload(&x).key(&msg.id).partition(-1),
                 Duration::from_secs(5),
             )
             .await
