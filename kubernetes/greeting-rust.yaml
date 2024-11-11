@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
     name: greeting-rust
 spec:
+    replicas: 1
     selector:
         matchLabels:
             app: greeting-rust
@@ -18,9 +19,9 @@ spec:
                     resources:
                         requests:
                             memory: "8Mi"
-                            cpu: "1m"
+                            cpu: "10m"
                         limits:
-                            cpu: "2m"
+                            cpu: "20m"
                             memory: "16Mi"
                     ports:
                         -   containerPort: 8080
@@ -51,5 +52,26 @@ metadata:
 spec:
     ports:
         - port: 8080
+          targetPort: 8080
     selector:
         app: greeting-rust
+    type: LoadBalancer
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+    name: greeting-rust-cpu-scaledobject
+    namespace: default
+spec:
+    scaleTargetRef:
+        name: greeting-rust
+    pollingInterval: 10
+    cooldownPeriod: 10                               # Optional. Default: 300 seconds
+    minReplicaCount: 1
+    maxReplicaCount: 10  # Max can go upto num of partitions you have in the topic
+    triggers:
+        - type: cpu
+          metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+          metadata:
+              value: "50"

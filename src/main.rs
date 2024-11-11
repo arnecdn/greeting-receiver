@@ -17,7 +17,7 @@ use tracing_subscriber::{EnvFilter};
 use tracing_subscriber::util::SubscriberInitExt;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-
+use uuid::Uuid;
 use greeting::{api, service};
 use settings::Settings;
 
@@ -70,8 +70,8 @@ async fn main() -> std::io::Result<()> {
     // global::set_meter_provider(meter_provider);
 
     info!("Starting server");
-
-    let repo = match KafkaGreetingRepository::new(app_config.kafka, "producer_1") {
+    let transaction_id = format!("producer_1_{}",Uuid::now_v7().to_string());
+    let repo = match KafkaGreetingRepository::new(app_config.kafka, &transaction_id) {
         Ok(r) => r,
         Err(e) => {
             error!("{:?}", e);

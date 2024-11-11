@@ -61,6 +61,7 @@ The specs are stored in ./kubernetes/ folder and can be deployed as a unit.
 Make sure the image of rust-docker is available for minikube. See section over. 
 ```
 kubectl apply -f kubernetes/greeting-rust.yaml
+kubectl port-forward svc/greeting-rust 8080:8080
 ```
 
 
