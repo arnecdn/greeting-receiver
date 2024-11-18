@@ -17,11 +17,11 @@ static RESOURCE: Lazy<Resource> = Lazy::new(|| {
     )])
 });
 
-pub(crate) fn init_logs(otlp_endpoint: &str) -> Result<LoggerProvider, LogError> {
+pub(crate) fn init_logs(otlp_endpoint: &str, resource: Resource) -> Result<LoggerProvider, LogError> {
 
     opentelemetry_otlp::new_pipeline()
         .logging()
-        .with_resource(RESOURCE.clone())
+        .with_resource(resource)
 
         .with_exporter(
             opentelemetry_otlp::new_exporter()
@@ -31,7 +31,7 @@ pub(crate) fn init_logs(otlp_endpoint: &str) -> Result<LoggerProvider, LogError>
         .install_batch(runtime::Tokio)
 }
 
-pub(crate) fn init_tracer_provider(otlp_endpoint: &str) -> Result<TracerProvider, TraceError> {
+pub(crate) fn init_tracer_provider(otlp_endpoint: &str,resource: Resource) -> Result<TracerProvider, TraceError> {
     opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(
@@ -40,14 +40,11 @@ pub(crate) fn init_tracer_provider(otlp_endpoint: &str) -> Result<TracerProvider
                 .tonic()
                 .with_endpoint(otlp_endpoint),
         )
-        .with_trace_config(Config::default().with_resource(RESOURCE.clone()))
+        .with_trace_config(Config::default().with_resource(resource))
         .install_batch(runtime::Tokio)
 }
-pub(crate) fn init_metrics(otlp_endpoint: &str) -> Result<opentelemetry_sdk::metrics::SdkMeterProvider, MetricsError> {
-    // let export_config = ExportConfig {
-    //     endpoint: otlp_endpoint.parse().unwrap(),
-    //     ..ExportConfig::default()
-    // };
+pub(crate) fn init_metrics(otlp_endpoint: &str, resource: Resource) -> Result<opentelemetry_sdk::metrics::SdkMeterProvider, MetricsError> {
+
     opentelemetry_otlp::new_pipeline()
         .metrics(runtime::Tokio)
         .with_exporter(
@@ -56,7 +53,7 @@ pub(crate) fn init_metrics(otlp_endpoint: &str) -> Result<opentelemetry_sdk::met
                 .with_endpoint(otlp_endpoint),
                 // .with_export_config(export_config),
         )
-        .with_resource(RESOURCE.clone())
+        .with_resource(resource)
         .build()
 }
 pub struct HeaderInjector<'a>(pub &'a mut OwnedHeaders);

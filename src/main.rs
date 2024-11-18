@@ -6,12 +6,12 @@ use actix_web::{App, HttpServer};
 use actix_web::web::Data;
 use log::{error, info};
 
-use opentelemetry::{global};
+use opentelemetry::{global, KeyValue};
 use opentelemetry::trace::TracerProvider;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 
 use opentelemetry_sdk::propagation::TraceContextPropagator;
-
+use opentelemetry_sdk::Resource;
 use tracing_subscriber::layer::{ SubscriberExt};
 use tracing_subscriber::{EnvFilter};
 use tracing_subscriber::util::SubscriberInitExt;
@@ -39,18 +39,27 @@ async fn main() -> std::io::Result<()> {
     )]
 
     struct ApiDoc;
-    let app_config = Settings::new();
 
-    let result = open_telemetry::init_tracer_provider(&app_config.otel_collector.oltp_endpoint);
+    const APP_NAME: &'static str = "greeting_rust";
+    let app_config = Settings::new();
+    let resource = Resource::new(vec![KeyValue::new(
+        opentelemetry_semantic_conventions::resource::SERVICE_NAME,
+        APP_NAME,
+            ), KeyValue::new(
+                opentelemetry_semantic_conventions::resource::K8S_POD_NAME,
+                app_config.kube.my_pod_name.clone(),
+            )]);
+
+    let result = open_telemetry::init_tracer_provider(&app_config.otel_collector.oltp_endpoint, resource.clone());
     let tracer_provider = result.unwrap();
     global::set_text_map_propagator(TraceContextPropagator::new());
 
     // Create a tracing layer with the configured tracer
     let tracer_layer = tracing_opentelemetry::layer().
-        with_tracer(tracer_provider.tracer("greeting_rust"));
+        with_tracer(tracer_provider.tracer(APP_NAME));
 
     // Initialize logs and save the logger_provider.
-    let logger_provider = open_telemetry::init_logs(&app_config.otel_collector.oltp_endpoint).unwrap();
+    let logger_provider = open_telemetry::init_logs(&app_config.otel_collector.oltp_endpoint, resource.clone()).unwrap();
     // Create a new OpenTelemetryTracingBridge using the above LoggerProvider.
     let logger_layer = OpenTelemetryTracingBridge::new(&logger_provider);
 
@@ -70,7 +79,7 @@ async fn main() -> std::io::Result<()> {
     // global::set_meter_provider(meter_provider);
 
     info!("Starting server");
-    let transaction_id = format!("producer_1_{}",Uuid::now_v7().to_string());
+    let transaction_id = format!("producer_1_{}",&app_config.kube.my_pod_name.clone());
     let repo = match KafkaGreetingRepository::new(app_config.kafka, &transaction_id) {
         Ok(r) => r,
         Err(e) => {
@@ -88,7 +97,6 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(svc.clone())
             .service(api::greet)
-            .service(api::list_greetings)
             //.wrap(RequestTracing::default())
             //.wrap(RequestMetrics::default())
             .service(

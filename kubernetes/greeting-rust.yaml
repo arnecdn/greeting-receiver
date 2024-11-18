@@ -21,7 +21,7 @@ spec:
                             memory: "8Mi"
                             cpu: "10m"
                         limits:
-                            cpu: "20m"
+                            cpu: "500m"
                             memory: "16Mi"
                     ports:
                         -   containerPort: 8080
@@ -39,6 +39,10 @@ spec:
                           value: "true"
                         - name: APP__OTEL_COLLECTOR__OLTP_ENDPOINT
                           value: "http://my-opentelemetry-collector:4317"
+                        - name: APP__KUBE__MY_POD_NAME
+                          valueFrom:
+                            fieldRef:
+                             fieldPath: metadata.name
 
                     command:
                               - "/usr/bin/server"
