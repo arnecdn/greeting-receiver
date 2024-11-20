@@ -12,7 +12,7 @@ use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::Resource;
-use tracing_subscriber::layer::{ SubscriberExt};
+use tracing_subscriber::layer::{SubscriberExt};
 use tracing_subscriber::{EnvFilter};
 use tracing_subscriber::util::SubscriberInitExt;
 use utoipa::OpenApi;
@@ -40,15 +40,14 @@ async fn main() -> std::io::Result<()> {
 
     struct ApiDoc;
 
-    const APP_NAME: &'static str = "greeting_rust";
     let app_config = Settings::new();
     let resource = Resource::new(vec![KeyValue::new(
         opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-        APP_NAME,
-            ), KeyValue::new(
-                opentelemetry_semantic_conventions::resource::K8S_POD_NAME,
-                app_config.kube.my_pod_name.clone(),
-            )]);
+        app_config.kube.my_pod_name.clone(),
+    ), KeyValue::new(
+        opentelemetry_semantic_conventions::resource::K8S_POD_NAME,
+        app_config.kube.my_pod_name.clone(),
+    )]);
 
     let result = open_telemetry::init_tracer_provider(&app_config.otel_collector.oltp_endpoint, resource.clone());
     let tracer_provider = result.unwrap();
@@ -56,7 +55,7 @@ async fn main() -> std::io::Result<()> {
 
     // Create a tracing layer with the configured tracer
     let tracer_layer = tracing_opentelemetry::layer().
-        with_tracer(tracer_provider.tracer(APP_NAME));
+        with_tracer(tracer_provider.tracer(app_config.kube.my_pod_name.clone()));
 
     // Initialize logs and save the logger_provider.
     let logger_provider = open_telemetry::init_logs(&app_config.otel_collector.oltp_endpoint, resource.clone()).unwrap();
@@ -79,7 +78,7 @@ async fn main() -> std::io::Result<()> {
     // global::set_meter_provider(meter_provider);
 
     info!("Starting server");
-    let transaction_id = format!("producer_1_{}",&app_config.kube.my_pod_name.clone());
+    let transaction_id = format!("producer_1_{}", &app_config.kube.my_pod_name.clone());
     let repo = match KafkaGreetingRepository::new(app_config.kafka, &transaction_id) {
         Ok(r) => r,
         Err(e) => {
