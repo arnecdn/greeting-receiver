@@ -916,6 +916,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
+name = "greeting_otel"
+version = "0.1.1"
+source = "git+https://github.com/arnecdn/greeting_otel_lib#0cc33d98736a29b79e364b811ee73596159b6944"
+dependencies = [
+ "metrics",
+ "once_cell",
+ "opentelemetry",
+ "opentelemetry-appender-tracing",
+ "opentelemetry-otlp",
+ "opentelemetry-semantic-conventions",
+ "opentelemetry_sdk",
+ "tokio",
+ "tokio-macros 0.2.6",
+ "tracing",
+ "tracing-core",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "greetings_rust"
 version = "0.1.0"
 dependencies = [
@@ -927,6 +947,7 @@ dependencies = [
  "derive_more 1.0.0",
  "dotenv",
  "futures",
+ "greeting_otel",
  "log",
  "metrics",
  "once_cell",
@@ -2502,8 +2523,19 @@ dependencies = [
  "pin-project-lite",
  "signal-hook-registry",
  "socket2",
- "tokio-macros",
+ "tokio-macros 2.3.0",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "tokio-macros"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e44da00bfc73a25f814cd8d7e57a68a5c31b74b3152a0a1d1f590c97ed06265a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]

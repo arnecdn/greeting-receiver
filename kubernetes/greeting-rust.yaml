@@ -52,15 +52,54 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-    name: greeting-rust
+    name: greeting-rust-service
 spec:
     ports:
         - port: 8080
           targetPort: 8080
+#          nodePort: 32002
     selector:
         app: greeting-rust
     type: LoadBalancer
+#    externalIPs:
+#      - 192.168.64.2
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: greeting-rust-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: greeting-rust.minikube
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: greeting-rust-service
+                port:
+                  number: 8080
 
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: greeting-rust-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: greeting-rust
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
 ---
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject

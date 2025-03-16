@@ -4,17 +4,17 @@ use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use log::info;
 use opentelemetry::{ global};
-use opentelemetry::trace::{ Status, TraceContextExt};
+use opentelemetry::propagation::{Injector};
+use opentelemetry::trace::{Status, TraceContextExt};
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{FutureProducer, FutureRecord, Producer};
 use rdkafka::ClientConfig;
-use rdkafka::message::{Header, OwnedHeaders};
+use rdkafka::message::{ Header, Headers, OwnedHeaders};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
-use crate::open_telemetry::HeaderInjector;
 use crate::settings::Kafka;
 
 pub struct KafkaGreetingRepository {
@@ -112,3 +112,22 @@ impl From<&Greeting> for GreetingMessage {
         }
     }
 }
+
+pub struct HeaderInjector<'a>(pub &'a mut OwnedHeaders);
+
+impl <'a>Injector for HeaderInjector<'a> {
+    fn set(&mut self, key: &str, value: String) {
+        let mut new = OwnedHeaders::new().insert(rdkafka::message::Header {
+            key,
+            value: Some(&value),
+        });
+
+        for header in self.0.iter() {
+            let s = String::from_utf8(header.value.unwrap().to_vec()).unwrap();
+            new = new.insert(rdkafka::message::Header { key: header.key, value: Some(&s) });
+        }
+
+        self.0.clone_from(&new);
+    }
+}
+

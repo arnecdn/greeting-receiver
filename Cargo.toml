@@ -43,4 +43,4 @@ once_cell = "1.19.0"
 tracing-opentelemetry = "0.26.0"
 metrics = "0.23.0"
 #actix-web-opentelemetry = { version = "0.18.0", features = ["sync-middleware"] }
-
+greeting_otel={git = "https://github.com/arnecdn/greeting_otel_lib", version = "0.1.1"}

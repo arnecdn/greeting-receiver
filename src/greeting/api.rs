@@ -1,5 +1,4 @@
 use std::sync::RwLock;
-use std::time::Instant;
 use actix_web::{get, HttpResponse, post, ResponseError, web};
 use actix_web::http::header::ContentType;
 use actix_web::http::StatusCode;
@@ -8,8 +7,6 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use derive_more::{Display};
 use log::info;
-use metrics::{histogram};
-use opentelemetry::{global, KeyValue};
 use serde::{Deserialize, Serialize};
 use tracing::{instrument};
 

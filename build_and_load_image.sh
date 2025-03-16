@@ -18,7 +18,7 @@ fi
 
 # Build the Docker image
 echo "Building Docker image..."
-docker build -q -t "arnecdn/greeting-rust:${TAG}" . || {
+podman build -q -t "docker.io/arnecdn/greeting-rust:${TAG}" . || {
   echo "Error: Docker build failed."
   exit 1
 }
@@ -26,7 +26,7 @@ docker build -q -t "arnecdn/greeting-rust:${TAG}" . || {
 # Create .docker directory and save the image
 mkdir -p .docker
 echo "Saving Docker image to .docker/greeting-rust.tar..."
-docker image save -o .docker/greeting-rust.tar "arnecdn/greeting-rust:${TAG}" || {
+podman save -o .docker/greeting-rust.tar "docker.io/arnecdn/greeting-rust:${TAG}" || {
   echo "Error: Failed to save Docker image."
   exit 1
 }
