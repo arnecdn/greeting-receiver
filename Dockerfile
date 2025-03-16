@@ -21,7 +21,7 @@ WORKDIR /app
 # Install host build dependencies.
 #RUN apk add --no-cache clang lld musl-dev git cmake g++ make
 RUN apt-get update && apt-get install -y cmake
-ENV SQLX_OFFLINE true
+#ENV SQLX_OFFLINE true
 
 
 # Build the application.

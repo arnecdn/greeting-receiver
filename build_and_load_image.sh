@@ -18,7 +18,7 @@ fi
 
 # Build the Docker image
 echo "Building Docker image..."
-podman build -q -t "docker.io/arnecdn/greeting-rust:${TAG}" . || {
+podman build -t "docker.io/arnecdn/greeting-rust:${TAG}" . || {
   echo "Error: Docker build failed."
   exit 1
 }
