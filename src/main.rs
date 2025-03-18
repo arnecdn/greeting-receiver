@@ -6,8 +6,6 @@ use actix_web::{App, HttpServer};
 use actix_web::web::Data;
 use log::{error, info};
 
-use opentelemetry::{global};
-
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 use greeting::{api, service};
@@ -64,7 +62,7 @@ async fn main() -> std::io::Result<()> {
         .bind(("127.0.0.1", 8080))?
         .run()
         .await.expect("Error stopping server");
-    global::shutdown_tracer_provider();
+    // global::shutdown_tracer_provider();
     // meter_provider.shutdown().expect("Problems shutting down meter provider");
     Ok(())
 }
