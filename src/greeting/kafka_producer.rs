@@ -5,14 +5,13 @@ use chrono::NaiveDateTime;
 use log::info;
 use opentelemetry::{ global};
 use opentelemetry::propagation::{Injector};
-use opentelemetry::trace::{Status, TraceContextExt};
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{FutureProducer, FutureRecord, Producer};
 use rdkafka::ClientConfig;
 use rdkafka::message::{ Header, Headers, OwnedHeaders};
 use serde::{Deserialize, Serialize};
 use serde_json;
-use tracing::Span;
+use tracing::{ Span};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
 use crate::settings::Kafka;
@@ -79,8 +78,8 @@ impl GreetingRepository for KafkaGreetingRepository {
         self.producer
             .commit_transaction(Duration::from_secs(5))
             .expect("Error comiting transaction");
-        parent_context.span().set_status(Status::Ok);
-        parent_context.span().end();
+
+
         Ok(())
     }
 }

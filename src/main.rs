@@ -4,6 +4,7 @@ use std::sync::RwLock;
 use actix_web::{App, HttpServer};
 
 use actix_web::web::Data;
+use greeting_otel::init_otel;
 use log::{error, info};
 
 use utoipa::OpenApi;
@@ -31,7 +32,7 @@ async fn main() -> std::io::Result<()> {
     let app_config = Settings::new();
 
     // Initialize logs and save the logger_provider.
-    greeting_otel::init_otel(&app_config.otel_collector.oltp_endpoint, "greeting_rust",&app_config.kube.my_pod_name).await;
+    init_otel(&app_config.otel_collector.oltp_endpoint, "greeting_rust",&app_config.kube.my_pod_name).await;
 
     info!("Starting server");
     let transaction_id = format!("producer_1_{}", &app_config.kube.my_pod_name.clone());

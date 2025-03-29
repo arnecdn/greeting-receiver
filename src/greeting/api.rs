@@ -8,7 +8,7 @@ use derive_more::Display;
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::sync::RwLock;
-use tracing::instrument;
+use tracing::{instrument, span};
 
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
@@ -56,11 +56,12 @@ pub async fn greet(
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
     greeting.validate()?;
+    span!(tracing::Level::INFO,"Starting");
 
     if let Ok(mut guard) = data.write() {
         info!("Received greeting {}", &greeting.0.heading);
         guard.receive_greeting(greeting.0.into()).await?;
-
+        span!(tracing::Level::INFO,"Finnished");
         return Ok(HttpResponse::Ok().body(""));
     }
     Err(Applicationerror)

@@ -2,7 +2,7 @@ use std::fmt::{Debug, Formatter};
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use derive_more::Display;
-
+use tracing::instrument;
 use uuid::Uuid;
 
 #[async_trait]
@@ -39,6 +39,7 @@ impl<C: GreetingRepository + Sync + Send> Debug for GreetingServiceImpl<C> {
 
 #[async_trait]
 impl<C: GreetingRepository + Sync + Send> GreetingService for GreetingServiceImpl<C> {
+    #[instrument]
     async fn receive_greeting(
         &mut self,
         greeting: Greeting,
