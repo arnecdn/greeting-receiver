@@ -1,14 +1,14 @@
 use actix_web::http::header::ContentType;
 use actix_web::http::StatusCode;
 use actix_web::web::Data;
-use actix_web::{get, post, web, HttpResponse, ResponseError};
+use actix_web::{ post, web, HttpResponse, ResponseError};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use derive_more::Display;
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::sync::RwLock;
-use tracing::{instrument, span};
+use tracing::{instrument};
 
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
@@ -16,30 +16,6 @@ use validator_derive::Validate;
 
 use crate::greeting::api::ApiError::{ApplicationError, Applicationerror, BadClientData};
 use crate::greeting::service::{Greeting, GreetingService, ServiceError};
-
-#[utoipa::path(
-    get,
-    path = "/greeting",
-    responses(
-        (status = 200, description = "Greetings", body = GreetingDto),
-        (status = NOT_FOUND, description = "Greetings was not found")
-    )
-    )]
-#[get("/greeting")]
-pub async fn list_greetings(
-    data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>>,
-) -> Result<HttpResponse, ApiError> {
-    if let Ok(read_guard) = data.read() {
-        let greetings = read_guard
-            .all_greetings()
-            .await?
-            .iter()
-            .map(|f| GreetingDto::from(f.clone()))
-            .collect::<Vec<_>>();
-        return Ok(HttpResponse::Ok().json(greetings));
-    }
-    Err(Applicationerror)
-}
 
 #[utoipa::path(
     post,
@@ -56,12 +32,10 @@ pub async fn greet(
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
     greeting.validate()?;
-    span!(tracing::Level::INFO,"Starting");
 
     if let Ok(mut guard) = data.write() {
         info!("Received greeting {}", &greeting.0.heading);
         guard.receive_greeting(greeting.0.into()).await?;
-        span!(tracing::Level::INFO,"Finnished");
         return Ok(HttpResponse::Ok().body(""));
     }
     Err(Applicationerror)
@@ -147,27 +121,6 @@ mod test {
     use super::*;
 
     #[actix_web::test]
-    async fn test_read_greeting() {
-        let data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> =
-            Data::new(RwLock::new(Box::new(GreetingSvcStub {})));
-        let app = test::init_service(
-            actix_web::App::new()
-                .app_data(data.clone())
-                .service(list_greetings),
-        )
-        .await;
-
-        let req = test::TestRequest::get()
-            .uri("/greeting")
-            .insert_header(actix_web::http::header::ContentType::json())
-            .to_request();
-
-        let resp = test::call_service(&app, req).await;
-
-        assert!(resp.status().is_success());
-    }
-
-    #[actix_web::test]
     async fn test_store_greeting() {
         let data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> =
             Data::new(RwLock::new(Box::new(GreetingSvcStub {})));
@@ -221,8 +174,5 @@ pub struct GreetingSvcStub;
 impl GreetingService for GreetingSvcStub {
     async fn receive_greeting(&mut self, _: Greeting) -> Result<(), ServiceError> {
         Ok(())
-    }
-    async fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError> {
-        return Ok(vec![]);
     }
 }

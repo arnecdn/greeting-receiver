@@ -11,13 +11,10 @@ pub trait GreetingService: Sync + Send + Debug {
         &mut self,
         greeting: Greeting,
     ) -> Result<(), ServiceError>;
-    async fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError>;
 }
 
 #[async_trait]
 pub trait GreetingRepository: Sync + Send {
-    async fn all(&self) -> Result<Vec<Greeting>, ServiceError>;
-
     async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError>;
 }
 
@@ -45,10 +42,6 @@ impl<C: GreetingRepository + Sync + Send> GreetingService for GreetingServiceImp
         greeting: Greeting,
     ) -> Result<(), ServiceError> {
         self.repo.store(greeting).await
-    }
-
-    async fn all_greetings(&self) -> Result<Vec<Greeting>, ServiceError> {
-        self.repo.all().await
     }
 }
 
@@ -105,11 +98,9 @@ mod tests {
             NaiveDateTime::default(),
         );
 
-        let result = service.receive_greeting(greeting.clone(), Context::new());
+        let result = service.receive_greeting(greeting.clone());
         assert!(block_on(result).is_ok());
 
-        let all_result = service.all_greetings();
-        assert_eq!(block_on(all_result).unwrap(), vec![greeting]);
     }
 
     struct MockGreetingRepository {
@@ -125,10 +116,6 @@ mod tests {
     }
     #[async_trait]
     impl GreetingRepository for MockGreetingRepository {
-        async fn all(&self) -> Result<Vec<Greeting>, ServiceError> {
-            Ok(self.greetings.clone())
-        }
-
         async fn store(
             &mut self,
             greeting: Greeting,

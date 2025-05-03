@@ -4,7 +4,6 @@ use std::sync::RwLock;
 use actix_web::{App, HttpServer};
 
 use actix_web::web::Data;
-use greeting_otel::init_otel;
 use log::{error, info};
 
 use utoipa::OpenApi;
@@ -15,15 +14,21 @@ use settings::Settings;
 use crate::greeting::kafka_producer::KafkaGreetingRepository;
 use crate::greeting::service::GreetingService;
 
+
+use actix_web_opentelemetry::{RequestMetrics};
+use greeting_otel::init_otel;
+// use greetings_rust::init_otel;
+
 mod greeting;
 mod settings;
+
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     #[derive(OpenApi)]
     #[openapi(
         info(description = "Greeting Api description"),
-        paths(api::greet, api::list_greetings),
+        paths(api::greet),
         components(schemas(api::GreetingDto))
     )]
 
@@ -51,6 +56,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .wrap(RequestMetrics::default())
             .app_data(svc.clone())
             .service(api::greet)
             //.wrap(RequestTracing::default())

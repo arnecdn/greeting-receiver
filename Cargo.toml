@@ -23,18 +23,20 @@ async-trait = "0.1.77"
 log = { version = "0.4.20", features = [] }
 config = "0.14.0"
 dotenv = "0.15.0"
-
-opentelemetry = {version = "0.29.0",features = ["metrics", "logs"] }
-tracing = { version = "0.1.41", features = ["std", "attributes"]}
-tracing-opentelemetry = "0.30.0"
+#
+#opentelemetry = {version = "0.29.0",features = ["metrics", "logs"] }
+#tracing = { version = "0.1.41", features = ["std", "attributes"]}
+#tracing-opentelemetry = "0.30.0"
 greeting_otel={git = "https://github.com/arnecdn/greeting_otel_lib", version = "0.29.0"}
 #greeting_otel={path= "../greeting_otel", version = "0.28.0"}
+actix-web-opentelemetry = { version = "0.21.0", features = ["metrics"] }
+opentelemetry = {version = "0.29.0",features = ["metrics", "logs"] }
+opentelemetry_sdk = {version = "0.29.0",  features = ["rt-tokio", "logs"] }
+opentelemetry-otlp = {version = "0.29.0", features = ["tonic", "metrics", "logs", "grpc-tonic"] }
+opentelemetry-semantic-conventions = { version = "0.29.0", features = ["semconv_experimental"] }
+opentelemetry-appender-tracing = {  version = "0.29.1",default-features = false}
 
-#opentelemetry = {version = "0.28.0",features = ["metrics", "logs"] }
-#opentelemetry_sdk = {version = "0.28.0",  features = ["rt-tokio", "logs"] }
-#opentelemetry-otlp = {version = "0.28.0", features = ["tonic", "metrics", "logs", "grpc-tonic"] }
-#opentelemetry-semantic-conventions = { version = "0.28.0", features = ["semconv_experimental"] }
-#opentelemetry-appender-tracing = {  version = "0.28.1",default-features = false}
-#
-#tracing-subscriber= {version= "0.3.18",features = ["env-filter","registry", "std"]}
-#tracing = { version = "0.1.40", features = ["std"]}
+tracing-subscriber= {version= "0.3.18",features = ["env-filter","registry", "std"]}
+tracing = { version = "0.1.40", features = ["std"]}
+tracing-opentelemetry = "0.30.0"
+
