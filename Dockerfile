@@ -8,7 +8,7 @@
 
 ARG RUST_VERSION=1.85-bullseye
 #ARG RUST_VERSION=latest
-ARG APP_NAME=greetings_distributor
+ARG APP_NAME=greetings-distributor
 
 ################################################################################
 # Create a stage for building the application.
