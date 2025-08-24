@@ -1,15 +1,16 @@
-# Greeting Rust
+# Greeting Distributor
 
-Greeting Rust is an application with a REST API for receiving greetings.
+Greeting Distributor is an application with a REST API for receiving greetings.
+It is part of a larger system that includes components for ingesting and querying greetings.
 
 ## Purpose
 It is an educational project designed to help learn and explore various aspects of software architecture and modern technologies using the Rust programming language.
 This repository provides a hands-on environment for experimenting with development tools, architectural patterns, and integration techniques.
 It is part of a pipeline of treating greeting messages, which includes:
 
-- [greeting-rust] to be named greeting-distributor 
-- [greeting-processor-rust] to be named greeting ingester
-- [greeting-ap] to be named greeting querier
+- [greeting-distributor] 
+- [greeting-ingester]
+- [greeting-querier]
 
 - 
 The main goal of this project is to facilitate practical learning in:
