@@ -1,9 +1,17 @@
 # Greeting Rust
 
-Greeting Rust is an educational project designed to help you learn and explore various aspects of software architecture and modern technologies using the Rust programming language. This repository provides a hands-on environment for experimenting with development tools, architectural patterns, and integration techniques.
+Greeting Rust is an application with a REST API for receiving greetings.
 
 ## Purpose
+It is an educational project designed to help learn and explore various aspects of software architecture and modern technologies using the Rust programming language.
+This repository provides a hands-on environment for experimenting with development tools, architectural patterns, and integration techniques.
+It is part of a pipeline of treating greeting messages, which includes:
 
+- [greeting-rust] to be named greeting-distributor 
+- [greeting-processor-rust] to be named greeting ingester
+- [greeting-ap] to be named greeting querier
+
+- 
 The main goal of this project is to facilitate practical learning in:
 - Software architecture concepts
 - Rust language fundamentals and advanced features
@@ -17,7 +25,20 @@ The main goal of this project is to facilitate practical learning in:
 - **Make**: To automate build and workflow processes.
 - **Minikube**: For running a local Kubernetes cluster.
 - **kubectl**: For controlling Kubernetes clusters.
+- **Kafka**: As a messaging system for the application.
+- **KEDA**: For event-driven scaling of Kubernetes workloads.
 
+
+## Usage
+The application is a Rust program that provides a simple greeting service. 
+It can be built and run locally or within a Minikube environment.
+It dependends on a Kafka instance to send and receive greeting messages.
+
+
+### Building the Application
+To build the Rust application, use the following command:
+
+```sh
 ## Building and Deploying to Minikube
 
 This project includes a Makefile that automates the process of building the Docker image, loading it into Minikube, and deploying the application using a local Kubernetes manifest.
