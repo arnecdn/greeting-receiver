@@ -1,8 +1,8 @@
 TAG ?= 0.1
-IMAGE_NAME = docker.io/arnecdn/greeting-rust
+IMAGE_NAME = docker.io/arnecdn/greeting-distributor
 DOCKER_DIR = .docker
-DOCKER_FILE = $(DOCKER_DIR)/greeting-rust.tar
-KUBERNETES_FILE = kubernetes/greeting-rust.yaml
+DOCKER_FILE = $(DOCKER_DIR)/greeting-distributor.tar
+KUBERNETES_FILE = kubernetes/greeting-distributor.yaml
 
 .PHONY: all build_image save_image load_image deploy clean
 

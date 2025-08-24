@@ -871,7 +871,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "greetings_rust"
+name = "greetings_distributor"
 version = "0.1.0"
 dependencies = [
  "actix-web",

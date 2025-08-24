@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: greeting-rust
+    name: greeting-distributor
 spec:
     replicas: 1
     selector:
         matchLabels:
-            app: greeting-rust
+            app: greeting-distributor
     template:
         metadata:
             labels:
-                app: greeting-rust
+                app: greeting-distributor
         spec:
             containers:
-                -   name: greeting-rust
-                    image: arnecdn/greeting-rust:0.1
+                -   name: greeting-distributor
+                    image: arnecdn/greeting-distributor:0.1
                     imagePullPolicy: IfNotPresent
                     resources:
                         requests:
@@ -52,14 +52,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-    name: greeting-rust-service
+    name: greeting-distributor-service
 spec:
     ports:
         - port: 8080
           targetPort: 8080
 #          nodePort: 32002
     selector:
-        app: greeting-rust
+        app: greeting-distributor
     type: LoadBalancer
 #    externalIPs:
 #      - 192.168.64.2
@@ -67,20 +67,20 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: greeting-rust-ingress
+  name: greeting-distributor-ingress
   annotations:
     nginx.ingress.kubernetes.io/service-upstream: "true"
 spec:
   ingressClassName: nginx
   rules:
-    - host: greeting-rust.minikube
+    - host: greeting-distributor.minikube
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: greeting-rust-service
+                name: greeting-distributor-service
                 port:
                   number: 8080
 
@@ -88,11 +88,11 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: greeting-rust-network-policy
+  name: greeting-distributor-network-policy
 spec:
   podSelector:
     matchLabels:
-      app: greeting-rust
+      app: greeting-distributor
   policyTypes:
     - Ingress
   ingress:
@@ -104,11 +104,11 @@ spec:
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-    name: greeting-rust-cpu-scaledobject
+    name: greeting-distributor-cpu-scaledobject
     namespace: default
 spec:
     scaleTargetRef:
-        name: greeting-rust
+        name: greeting-distributor
     pollingInterval: 10
     cooldownPeriod: 10                               # Optional. Default: 300 seconds
     minReplicaCount: 1
