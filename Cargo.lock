@@ -856,22 +856,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
-name = "greeting_otel"
-version = "0.29.0"
-source = "git+https://github.com/arnecdn/greeting_otel_lib#d2657b14b0aedb8bdbd68282fb153e94efae8d84"
-dependencies = [
- "opentelemetry 0.29.0",
- "opentelemetry-appender-tracing",
- "opentelemetry-otlp",
- "opentelemetry-semantic-conventions 0.29.0",
- "opentelemetry_sdk",
- "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "greetings-distributor"
+name = "greeting-receiver"
 version = "0.1.0"
 dependencies = [
  "actix-web",
@@ -900,6 +885,21 @@ dependencies = [
  "uuid",
  "validator",
  "validator_derive",
+]
+
+[[package]]
+name = "greeting_otel"
+version = "0.29.0"
+source = "git+https://github.com/arnecdn/greeting_otel_lib#d2657b14b0aedb8bdbd68282fb153e94efae8d84"
+dependencies = [
+ "opentelemetry 0.29.0",
+ "opentelemetry-appender-tracing",
+ "opentelemetry-otlp",
+ "opentelemetry-semantic-conventions 0.29.0",
+ "opentelemetry_sdk",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
 ]
 
 [[package]]

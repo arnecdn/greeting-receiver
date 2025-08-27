@@ -8,7 +8,7 @@ It is an educational project designed to help learn and explore various aspects 
 This repository provides a hands-on environment for experimenting with development tools, architectural patterns, and integration techniques.
 It is part of a pipeline of treating greeting messages, which includes:
 
-- [greeting-distributor] 
+- [greeting-reveiver] 
 - [greeting-ingester]
 - [greeting-querier]
 
