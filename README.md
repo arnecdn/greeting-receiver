@@ -9,8 +9,8 @@ This repository provides a hands-on environment for experimenting with developme
 It is part of a pipeline of treating greeting messages, which includes:
 
 - [greeting-reveiver] 
-- [greeting-ingester]
-- [greeting-querier]
+- [greeting-processor]
+- [greeting-api]
 
 - 
 The main goal of this project is to facilitate practical learning in:
