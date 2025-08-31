@@ -6,22 +6,20 @@ use actix_web::{App, HttpServer};
 use actix_web::web::Data;
 use log::{error, info};
 
-use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi;
 use greeting::{api, service};
 use settings::Settings;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 use crate::greeting::kafka_producer::KafkaGreetingRepository;
 use crate::greeting::service::GreetingService;
 
-
-use actix_web_opentelemetry::{RequestMetrics};
+use actix_web_opentelemetry::RequestMetrics;
 use greeting_otel::init_otel;
 // use greetings_rust::init_otel;
 
 mod greeting;
 mod settings;
-
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -37,7 +35,12 @@ async fn main() -> std::io::Result<()> {
     let app_config = Settings::new();
 
     // Initialize logs and save the logger_provider.
-    init_otel(&app_config.otel_collector.oltp_endpoint, "greeting_rust",&app_config.kube.my_pod_name).await;
+    let providers = init_otel(
+        &app_config.otel_collector.oltp_endpoint,
+        "greeting_rust",
+        &app_config.kube.my_pod_name,
+    )
+    .await;
 
     info!("Starting server");
     let transaction_id = format!("producer_1_{}", &app_config.kube.my_pod_name.clone());
@@ -66,10 +69,13 @@ async fn main() -> std::io::Result<()> {
                     .url("/api-docs/openapi.json", ApiDoc::openapi()),
             )
     })
-        .bind(("127.0.0.1", 8080))?
-        .run()
-        .await.expect("Error stopping server");
-    // global::shutdown_tracer_provider();
-    // meter_provider.shutdown().expect("Problems shutting down meter provider");
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
+    .expect("Error stopping server");
+
+    if let Err(e) = providers.shutdown().await{
+        error!("Failed to shut down: {:?}", e);
+    }
     Ok(())
 }
