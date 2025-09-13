@@ -37,7 +37,7 @@ async fn main() -> std::io::Result<()> {
     // Initialize logs and save the logger_provider.
     let providers = init_otel(
         &app_config.otel_collector.oltp_endpoint,
-        "greeting_rust",
+        "greeting_receiver",
         &app_config.kube.my_pod_name,
     )
     .await;

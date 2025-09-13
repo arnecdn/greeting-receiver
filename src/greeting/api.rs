@@ -26,7 +26,7 @@ use crate::greeting::service::{Greeting, GreetingService, ServiceError};
     ),
     )]
 #[post("/greeting")]
-#[instrument(name = "greeting_rust_receive")]
+#[instrument(name = "receive")]
 pub async fn greet(
     data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>>,
     greeting: web::Json<GreetingDto>,
