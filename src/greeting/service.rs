@@ -52,6 +52,7 @@ pub enum ServiceError {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Greeting {
+    pub(crate) external_reference: String,
     pub(crate) id: String,
     pub(crate) to: String,
     pub(crate) from: String,
@@ -62,6 +63,7 @@ pub struct Greeting {
 
 impl Greeting {
     pub fn new(
+        greeting_id: String,
         to: String,
         from: String,
         heading: String,
@@ -69,6 +71,7 @@ impl Greeting {
         time: NaiveDateTime,
     ) -> Greeting {
         Greeting {
+            external_reference: greeting_id,
             id: String::from(Uuid::now_v7()),
             to,
             from,
@@ -91,6 +94,7 @@ mod tests {
         let mut service = GreetingServiceImpl::new(mock_repo);
 
         let greeting = Greeting::new(
+            String::from("test_id"),
             String::from("John"),
             String::from("Jane"),
             String::from("Hello"),

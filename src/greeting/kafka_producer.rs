@@ -49,7 +49,7 @@ impl GreetingRepository for KafkaGreetingRepository {
         let parent_context = Span::current().context();
 
         let mut headers = OwnedHeaders::new().insert(Header {
-            key: "greeting_id",
+            key: "id",
             value: Some(&msg.id),
         });
 
@@ -89,6 +89,7 @@ impl From<KafkaError> for ServiceError {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GreetingMessage {
+    external_reference: String,
     id: String,
     to: String,
     from: String,
@@ -100,6 +101,7 @@ pub struct GreetingMessage {
 impl From<&Greeting> for GreetingMessage {
     fn from(greeting: &Greeting) -> Self {
         GreetingMessage {
+            external_reference: greeting.external_reference.to_string(),
             id: greeting.id.to_string(),
             to: greeting.to.to_string(),
             from: greeting.from.to_string(),

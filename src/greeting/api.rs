@@ -79,6 +79,7 @@ impl From<ServiceError> for ApiError {
 #[derive(Validate, Serialize, Deserialize, Clone, ToSchema, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct GreetingDto {
+    external_reference: String,
     #[validate(length(min = 1, max = 20))]
     to: String,
     #[validate(length(min = 1, max = 20))]
@@ -94,6 +95,7 @@ pub struct GreetingDto {
 impl Into<Greeting> for GreetingDto {
     fn into(self) -> Greeting {
         Greeting::new(
+            self.external_reference.clone(),
             self.to.clone(),
             self.from.clone(),
             self.heading.clone(),
@@ -105,6 +107,7 @@ impl Into<Greeting> for GreetingDto {
 impl From<Greeting> for GreetingDto {
     fn from(greeting: Greeting) -> Self {
         GreetingDto {
+            external_reference: greeting.external_reference.clone(),
             to: greeting.to.clone(),
             from: greeting.from.clone(),
             heading: greeting.heading.clone(),
@@ -131,6 +134,7 @@ mod test {
             .uri("/greeting")
             .insert_header(actix_web::http::header::ContentType::json())
             .set_json(GreetingDto {
+                external_reference: "1".to_string(),
                 to: String::from("test"),
                 from: String::from("testa"),
                 heading: String::from("Merry Christmas"),
@@ -154,6 +158,7 @@ mod test {
             .uri("/greeting")
             .insert_header(actix_web::http::header::ContentType::json())
             .set_json(GreetingDto {
+                external_reference: "1".to_string(),
                 to: String::from("testtesttesttesttesttesttesttest"),
                 from: String::from("testa"),
                 heading: String::from("Merry Christmas"),
