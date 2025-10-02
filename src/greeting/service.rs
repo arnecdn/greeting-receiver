@@ -1,6 +1,7 @@
+use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use async_trait::async_trait;
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime};
 use derive_more::Display;
 use tracing::instrument;
 use uuid::Uuid;
@@ -59,6 +60,7 @@ pub struct Greeting {
     pub(crate) heading: String,
     pub(crate) message: String,
     pub(crate) created: NaiveDateTime,
+    pub(crate) events_created: HashMap<String, NaiveDateTime>,
 }
 
 impl Greeting {
@@ -78,15 +80,18 @@ impl Greeting {
             heading,
             message,
             created: time,
+            events_created: HashMap::new(),
         }
+    }
+
+    pub fn add_event(&mut self, event: &str){
+        self.events_created.insert(String::from(event), NaiveDateTime::default());
     }
 }
 #[cfg(test)]
 mod tests {
     use super::*;
     use futures::executor::block_on;
-    use opentelemetry::trace::TraceContextExt;
-    use uuid::Uuid;
 
     #[test]
     fn test_receive_greeting() {

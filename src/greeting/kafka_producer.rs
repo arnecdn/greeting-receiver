@@ -1,5 +1,5 @@
+use std::collections::HashMap;
 use std::time::Duration;
-
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
 use crate::settings::Kafka;
 use async_trait::async_trait;
@@ -96,6 +96,8 @@ pub struct GreetingMessage {
     heading: String,
     message: String,
     created: NaiveDateTime,
+    events_created: HashMap<String, NaiveDateTime>,
+
 }
 
 impl From<&Greeting> for GreetingMessage {
@@ -108,6 +110,7 @@ impl From<&Greeting> for GreetingMessage {
             heading: greeting.heading.to_string(),
             message: greeting.message.to_string(),
             created: *&greeting.created,
+            events_created:  greeting.events_created.clone(),
         }
     }
 }

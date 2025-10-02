@@ -94,14 +94,16 @@ pub struct GreetingDto {
 
 impl Into<Greeting> for GreetingDto {
     fn into(self) -> Greeting {
-        Greeting::new(
+        let mut received_greeting = Greeting::new(
             self.external_reference.clone(),
             self.to.clone(),
             self.from.clone(),
             self.heading.clone(),
             self.message.clone(),
             self.created.naive_utc(),
-        )
+        );
+        received_greeting.add_event(&"received_greeting");
+        received_greeting
     }
 }
 impl From<Greeting> for GreetingDto {
