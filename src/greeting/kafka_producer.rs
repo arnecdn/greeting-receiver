@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-use std::time::Duration;
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
 use crate::settings::Kafka;
 use async_trait::async_trait;
@@ -13,6 +11,8 @@ use rdkafka::producer::{FutureProducer, FutureRecord, Producer};
 use rdkafka::ClientConfig;
 use serde::{Deserialize, Serialize};
 use serde_json;
+use std::collections::HashMap;
+use std::time::Duration;
 use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
@@ -80,6 +80,14 @@ impl GreetingRepository for KafkaGreetingRepository {
 
         Ok(())
     }
+
+    async fn peek_topic(&mut self) -> Result<(), ServiceError> {
+        self.producer
+            .client()
+            .fetch_metadata(Some(self.topic.as_str()), Duration::from_secs(5))
+            .expect("Failed fetch metadata");
+        Ok(())
+    }
 }
 impl From<KafkaError> for ServiceError {
     fn from(_error: KafkaError) -> Self {
@@ -97,7 +105,6 @@ pub struct GreetingMessage {
     message: String,
     created: NaiveDateTime,
     events_created: HashMap<String, NaiveDateTime>,
-
 }
 
 impl From<&Greeting> for GreetingMessage {
@@ -110,7 +117,7 @@ impl From<&Greeting> for GreetingMessage {
             heading: greeting.heading.to_string(),
             message: greeting.message.to_string(),
             created: *&greeting.created,
-            events_created:  greeting.events_created.clone(),
+            events_created: greeting.events_created.clone(),
         }
     }
 }

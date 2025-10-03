@@ -16,7 +16,6 @@ use crate::greeting::service::GreetingService;
 
 use actix_web_opentelemetry::RequestMetrics;
 use greeting_otel::init_otel;
-// use greetings_rust::init_otel;
 
 mod greeting;
 mod settings;
@@ -26,7 +25,7 @@ async fn main() -> std::io::Result<()> {
     #[derive(OpenApi)]
     #[openapi(
         info(description = "Greeting Api description"),
-        paths(api::greet),
+        paths(api::greet, api::health),
         components(schemas(api::GreetingDto))
     )]
 
@@ -62,6 +61,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(RequestMetrics::default())
             .app_data(svc.clone())
             .service(api::greet)
+            .service(api::health)
             //.wrap(RequestTracing::default())
             //.wrap(RequestMetrics::default())
             .service(
@@ -69,7 +69,7 @@ async fn main() -> std::io::Result<()> {
                     .url("/api-docs/openapi.json", ApiDoc::openapi()),
             )
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 8080))?
     .run()
     .await
     .expect("Error stopping server");

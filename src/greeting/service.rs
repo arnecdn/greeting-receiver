@@ -12,11 +12,16 @@ pub trait GreetingService: Sync + Send + Debug {
         &mut self,
         greeting: Greeting,
     ) -> Result<(), ServiceError>;
+
+    async fn check_liveness(
+        &mut self,
+    ) -> Result<(), ServiceError>;
 }
 
 #[async_trait]
 pub trait GreetingRepository: Sync + Send {
     async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError>;
+    async fn peek_topic(&mut self) -> Result<(), ServiceError>;
 }
 
 pub struct GreetingServiceImpl<C> {
@@ -43,6 +48,10 @@ impl<C: GreetingRepository + Sync + Send> GreetingService for GreetingServiceImp
         greeting: Greeting,
     ) -> Result<(), ServiceError> {
         self.repo.store(greeting).await
+    }
+
+    async fn check_liveness(&mut self) -> Result<(), ServiceError> {
+        self.repo.peek_topic().await
     }
 }
 
@@ -111,6 +120,15 @@ mod tests {
         assert!(block_on(result).is_ok());
 
     }
+    #[test]
+    fn check_liveness() {
+        let mock_repo = MockGreetingRepository::new();
+        let mut service = GreetingServiceImpl::new(mock_repo);
+
+        let result = service.check_liveness();
+        assert!(block_on(result).is_ok());
+
+    }
 
     struct MockGreetingRepository {
         greetings: Vec<Greeting>,
@@ -131,6 +149,10 @@ mod tests {
         ) -> Result<(), ServiceError> {
             let repo = &mut self.greetings;
             repo.push(greeting);
+            Ok(())
+        }
+
+        async fn peek_topic(&mut self) -> Result<(), ServiceError> {
             Ok(())
         }
     }

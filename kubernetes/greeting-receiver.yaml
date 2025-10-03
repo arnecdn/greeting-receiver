@@ -16,6 +16,20 @@ spec:
                 -   name: greeting-receiver
                     image: docker.io/arnecdn/greeting-receiver:0.4
                     imagePullPolicy: IfNotPresent
+                    livenessProbe:
+                      httpGet:
+                        path: /health
+                        port: 8080
+                      initialDelaySeconds: 60
+                      periodSeconds: 10
+                      failureThreshold: 3
+                    readinessProbe:
+                      httpGet:
+                        path: /health
+                        port: 8080
+                      initialDelaySeconds: 60
+                      periodSeconds: 10
+                      failureThreshold: 3
                     resources:
                         requests:
                             memory: "8Mi"
