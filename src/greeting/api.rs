@@ -2,19 +2,19 @@ use actix_web::http::header::ContentType;
 use actix_web::http::StatusCode;
 use actix_web::web::Data;
 use actix_web::{get, post, web, HttpResponse, ResponseError};
-use async_trait::async_trait;
+
 use chrono::{DateTime, Utc};
-use derive_more::Display;
 use log::info;
 use serde::{Deserialize, Serialize};
-use std::sync::RwLock;
-use tracing::{instrument};
+use std::fmt::Display;
+use std::sync::{RwLock};
+use tracing::instrument;
 
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;
 
-use crate::greeting::api::ApiError::{ApplicationError, Applicationerror, BadClientData};
+use crate::greeting::api::ApiError::{ApplicationError, BadClientData, UnknownError};
 use crate::greeting::service::{Greeting, GreetingService, ServiceError};
 
 #[utoipa::path(
@@ -32,13 +32,19 @@ pub async fn greet(
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
     greeting.validate()?;
+    match data.write() {
+        Ok(mut guard) => {
+            info!("Received greeting {}", &greeting.0.heading);
+            guard.receive_greeting(greeting.0.into()).await?;
+            Ok(HttpResponse::Ok().body(""))
+        }
 
-    if let Ok(mut guard) = data.write() {
-        info!("Received greeting {}", &greeting.0.heading);
-        guard.receive_greeting(greeting.0.into()).await?;
-        return Ok(HttpResponse::Ok().body(""));
+        Err(e) => Err(UnknownError(format!(
+            "Failed writing  msg:{:?} to kafka with error: {}",
+            greeting,
+            e.to_string()
+        ))),
     }
-    Err(Applicationerror)
 }
 
 #[utoipa::path(
@@ -52,19 +58,27 @@ pub async fn greet(
 )]
 #[get("/health")]
 #[instrument(name = "health")]
-pub async fn health(data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>>,) -> Result<HttpResponse, ApiError>{
-    if let Ok(mut guard) = data.write() {
-        guard.check_liveness().await?;
-        return Ok(HttpResponse::Ok().body(""));
+pub async fn health(
+    data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>>,
+) -> Result<HttpResponse, ApiError> {
+    match data.write() {
+        Ok(mut guard) => {
+            guard.check_liveness().await?;
+            return Ok(HttpResponse::Ok().body(""));
+        }
+
+        Err(e) => Err(UnknownError(format!(
+            "Failed checking health with error: {}",
+            e.to_string()
+        ))),
     }
-    Err(Applicationerror)
 }
 
-#[derive(Debug, Display)]
+#[derive(Debug)]
 pub enum ApiError {
     BadClientData(ValidationErrors),
     ApplicationError(ServiceError),
-    Applicationerror,
+    UnknownError(String),
 }
 
 impl ResponseError for ApiError {
@@ -83,6 +97,15 @@ impl ResponseError for ApiError {
     }
 }
 
+impl Display for ApiError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BadClientData(e) => write!(f, "Bad client data: {}", e),
+            ApplicationError(e) => write!(f, "Application error: {}", e),
+            UnknownError(msg) => write!(f, "Application error: {}", msg),
+        }
+    }
+}
 impl From<ValidationErrors> for ApiError {
     fn from(value: ValidationErrors) -> Self {
         BadClientData(value)
@@ -141,7 +164,7 @@ impl From<Greeting> for GreetingDto {
 #[cfg(test)]
 mod test {
     use actix_web::test;
-
+    use async_trait::async_trait;
     use super::*;
 
     #[actix_web::test]
@@ -200,25 +223,25 @@ mod test {
         let app =
             test::init_service(actix_web::App::new().app_data(data.clone()).service(greet)).await;
 
-        let req = test::TestRequest::get()
-            .uri("/health")
-            .to_request();
+        let req = test::TestRequest::get().uri("/health").to_request();
 
         let resp = test::call_service(&app, req).await;
         assert!(resp.status().is_client_error());
         println!("{:?}", resp.response().body());
     }
-}
-#[derive(Clone, Debug)]
-pub struct GreetingSvcStub;
 
-#[async_trait]
-impl GreetingService for GreetingSvcStub {
-    async fn receive_greeting(&mut self, _: Greeting) -> Result<(), ServiceError> {
-        Ok(())
-    }
 
-    async fn check_liveness(&mut self) -> Result<(), ServiceError> {
-        Ok(())
+    #[derive(Clone, Debug)]
+    pub struct GreetingSvcStub;
+
+    #[async_trait]
+    impl GreetingService for GreetingSvcStub {
+        async fn receive_greeting(&mut self, _: Greeting) -> Result<(), ServiceError> {
+            Ok(())
+        }
+
+        async fn check_liveness(&mut self) -> Result<(), ServiceError> {
+            Ok(())
+        }
     }
 }

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use async_trait::async_trait;
-use chrono::{NaiveDateTime};
+use chrono::{ NaiveDateTime, Utc};
 use derive_more::Display;
 use tracing::instrument;
 use uuid::Uuid;
@@ -94,7 +94,7 @@ impl Greeting {
     }
 
     pub fn add_event(&mut self, event: &str){
-        self.events_created.insert(String::from(event), NaiveDateTime::default());
+        self.events_created.insert(String::from(event), Utc::now().naive_utc());
     }
 }
 #[cfg(test)]
@@ -113,7 +113,7 @@ mod tests {
             String::from("Jane"),
             String::from("Hello"),
             String::from("Hi John!"),
-            NaiveDateTime::default(),
+            Utc::now().naive_utc(),
         );
 
         let result = service.receive_greeting(greeting.clone());
