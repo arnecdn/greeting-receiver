@@ -63,7 +63,7 @@ pub enum ServiceError {
 #[derive(Clone, PartialEq, Debug)]
 pub struct Greeting {
     pub(crate) external_reference: String,
-    pub(crate) id: String,
+    pub(crate) message_id: String,
     pub(crate) to: String,
     pub(crate) from: String,
     pub(crate) heading: String,
@@ -83,7 +83,7 @@ impl Greeting {
     ) -> Greeting {
         Greeting {
             external_reference: greeting_id,
-            id: String::from(Uuid::now_v7()),
+            message_id: String::from(Uuid::now_v7()),
             to,
             from,
             heading,

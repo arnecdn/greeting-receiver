@@ -50,7 +50,7 @@ impl GreetingRepository for KafkaGreetingRepository {
 
         let mut headers = OwnedHeaders::new().insert(Header {
             key: "id",
-            value: Some(&msg.id),
+            value: Some(&msg.message_id),
         });
 
         global::get_text_map_propagator(|propagator| {
@@ -60,14 +60,14 @@ impl GreetingRepository for KafkaGreetingRepository {
         self.producer
             .begin_transaction()
             .expect("Failed beginning transaction");
-        info!("Sending msg id {}", msg.id);
+        info!("Sending msg id {}", msg.message_id);
 
         self.producer
             .send(
                 FutureRecord::to(&self.topic)
                     .headers(headers)
                     .payload(&x)
-                    .key(&msg.id)
+                    .key(&msg.message_id)
                     .partition(-1),
                 Duration::from_secs(5),
             )
@@ -98,7 +98,7 @@ impl From<KafkaError> for ServiceError {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GreetingMessage {
     external_reference: String,
-    id: String,
+    message_id: String,
     to: String,
     from: String,
     heading: String,
@@ -111,7 +111,7 @@ impl From<&Greeting> for GreetingMessage {
     fn from(greeting: &Greeting) -> Self {
         GreetingMessage {
             external_reference: greeting.external_reference.to_string(),
-            id: greeting.id.to_string(),
+            message_id: greeting.message_id.to_string(),
             to: greeting.to.to_string(),
             from: greeting.from.to_string(),
             heading: greeting.heading.to_string(),
