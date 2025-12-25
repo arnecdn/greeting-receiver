@@ -80,14 +80,6 @@ impl GreetingRepository for KafkaGreetingRepository {
 
         Ok(())
     }
-
-    async fn peek_topic(&mut self) -> Result<(), ServiceError> {
-        self.producer
-            .client()
-            .fetch_metadata(Some(self.topic.as_str()), Duration::from_secs(5))
-            .expect("Failed fetch metadata");
-        Ok(())
-    }
 }
 impl From<KafkaError> for ServiceError {
     fn from(_error: KafkaError) -> Self {

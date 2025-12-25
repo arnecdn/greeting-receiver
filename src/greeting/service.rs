@@ -21,7 +21,6 @@ pub trait GreetingService: Sync + Send + Debug {
 #[async_trait]
 pub trait GreetingRepository: Sync + Send {
     async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError>;
-    async fn peek_topic(&mut self) -> Result<(), ServiceError>;
 }
 
 pub struct GreetingServiceImpl<C> {
@@ -51,7 +50,7 @@ impl<C: GreetingRepository + Sync + Send> GreetingService for GreetingServiceImp
     }
 
     async fn check_liveness(&mut self) -> Result<(), ServiceError> {
-        self.repo.peek_topic().await
+        Ok(())
     }
 }
 
@@ -152,8 +151,5 @@ mod tests {
             Ok(())
         }
 
-        async fn peek_topic(&mut self) -> Result<(), ServiceError> {
-            Ok(())
-        }
     }
 }
