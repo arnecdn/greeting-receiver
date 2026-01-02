@@ -35,8 +35,11 @@ pub async fn greet(
     match data.write() {
         Ok(mut guard) => {
             info!("Received greeting {}", &greeting.0.heading);
-            guard.receive_greeting(greeting.0.into()).await?;
-            Ok(HttpResponse::Ok().body(""))
+            let greeting_msg:Greeting = greeting.0.into();
+            let resp = GreetingReceived {message_id: greeting_msg.message_id.clone()};
+
+            guard.receive_greeting(greeting_msg).await?;
+            Ok(HttpResponse::Ok().json(resp))
         }
 
         Err(e) => Err(UnknownError(format!(
@@ -132,6 +135,12 @@ pub struct GreetingDto {
     message: String,
     #[schema(value_type = String, format = DateTime)]
     created: DateTime<Utc>,
+}
+
+#[derive(Serialize, Deserialize, Clone, ToSchema, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct GreetingReceived {
+    message_id: String,
 }
 
 impl Into<Greeting> for GreetingDto {
