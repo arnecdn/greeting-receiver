@@ -125,7 +125,7 @@ impl From<ServiceError> for ApiError {
 #[serde(rename_all = "camelCase")]
 pub struct GreetingDto {
     external_reference: String,
-    #[validate(length(min = 1, max = 20))]
+    #[validate(length(min = 1, max = 36))]
     to: String,
     #[validate(length(min = 1, max = 20))]
     from: String,
