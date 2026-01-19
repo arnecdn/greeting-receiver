@@ -73,7 +73,7 @@ pub struct Greeting {
 
 impl Greeting {
     pub fn new(
-        greeting_id: String,
+        external_reference: String,
         to: String,
         from: String,
         heading: String,
@@ -81,7 +81,7 @@ impl Greeting {
         time: NaiveDateTime,
     ) -> Greeting {
         Greeting {
-            external_reference: greeting_id,
+            external_reference,
             message_id: String::from(Uuid::now_v7()),
             to,
             from,
