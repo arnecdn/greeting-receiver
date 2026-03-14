@@ -867,6 +867,7 @@ dependencies = [
  "rdkafka",
  "serde",
  "serde_json",
+ "tokio",
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",

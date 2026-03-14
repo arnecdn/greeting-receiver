@@ -14,14 +14,14 @@ spec:
         spec:
             containers:
                 -   name: greeting-receiver
-                    image: docker.io/arnecdn/greeting-receiver:0.4
+                    image: docker.io/arnecdn/greeting-receiver:0.5
                     imagePullPolicy: IfNotPresent
                     livenessProbe:
                       httpGet:
                         path: /health
                         port: 8080
                       initialDelaySeconds: 10
-                      periodSeconds: 10
+                      periodSeconds: 30
                       failureThreshold: 3
                     readinessProbe:
                       httpGet:
@@ -32,11 +32,11 @@ spec:
                       failureThreshold: 3
                     resources:
                         requests:
-                            memory: "8Mi"
-                            cpu: "10m"
-                        limits:
+                            memory: "256Mi"
                             cpu: "500m"
-                            memory: "16Mi"
+                        limits:
+                            memory: "256Mi"
+                            cpu: "500m"
                     ports:
                         -   containerPort: 8080
                     env:
@@ -52,7 +52,7 @@ spec:
                         - name: APP__KAFKA__ENABLE_IDEMPOTENCE
                           value: "true"
                         - name: APP__OTEL_COLLECTOR__OLTP_ENDPOINT
-                          value: "http://grafana-alloy:4317"
+                          value: "http://meta-monitoring-alloy.meta-monitoring.svc.cluster.local:4317"
                         - name: APP__KUBE__MY_POD_NAME
                           valueFrom:
                             fieldRef:
@@ -114,21 +114,21 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: ingress-nginx
----
-apiVersion: keda.sh/v1alpha1
-kind: ScaledObject
-metadata:
-    name: greeting-receiver-cpu-scaledobject
-    namespace: default
-spec:
-    scaleTargetRef:
-        name: greeting-receiver
-    pollingInterval: 10
-    cooldownPeriod: 10                               # Optional. Default: 300 seconds
-    minReplicaCount: 1
-    maxReplicaCount: 10  # Max can go upto num of partitions you have in the topic
-    triggers:
-        - type: cpu
-          metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
-          metadata:
-              value: "50"
+#---
+#apiVersion: keda.sh/v1alpha1
+#kind: ScaledObject
+#metadata:
+#    name: greeting-receiver-cpu-scaledobject
+#    namespace: default
+#spec:
+#    scaleTargetRef:
+#        name: greeting-receiver
+#    pollingInterval: 10
+#    cooldownPeriod: 10                               # Optional. Default: 300 seconds
+#    minReplicaCount: 1
+#    maxReplicaCount: 1  # Max can go upto num of partitions you have in the topic
+#    triggers:
+#        - type: cpu
+#          metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+#          metadata:
+#              value: "500m"

@@ -30,10 +30,10 @@ impl KafkaGreetingRepository {
             .set("transactional.id", transactional_id)
             .set("message.send.max.retries", "10")
             .create()
-            .expect("Producer creation error with invalid configuration");
+            .map_err(|e| ServiceError::RepoError(format!("Producer creation error: {}", e)))?;
 
         p.init_transactions(Duration::from_secs(5))
-            .expect("Expected to init transactions");
+            .map_err(|e| ServiceError::RepoError(format!("Failed to init transactions: {}", e)))?;
 
         Ok(KafkaGreetingRepository {
             producer: p,
@@ -59,10 +59,12 @@ impl GreetingRepository for KafkaGreetingRepository {
 
         self.producer
             .begin_transaction()
-            .expect("Failed beginning transaction");
+            .map_err(|e| ServiceError::RepoError(format!("Failed beginning transaction: {}", e)))?;
+
         info!("Sending msg id {}", msg.message_id);
 
-        self.producer
+        let send_result = self
+            .producer
             .send(
                 FutureRecord::to(&self.topic)
                     .headers(headers)
@@ -71,12 +73,17 @@ impl GreetingRepository for KafkaGreetingRepository {
                     .partition(-1),
                 Duration::from_secs(5),
             )
-            .await
-            .expect("Failed");
+            .await;
 
-        self.producer
-            .commit_transaction(Duration::from_secs(5))
-            .expect("Error comiting transaction");
+        if let Err((e, _)) = send_result {
+            let _ = self.producer.abort_transaction(Duration::from_secs(5));
+            return Err(ServiceError::RepoError(format!("Failed sending message: {}", e)));
+        }
+
+        if let Err(e) = self.producer.commit_transaction(Duration::from_secs(5)) {
+            let _ = self.producer.abort_transaction(Duration::from_secs(5));
+            return Err(ServiceError::RepoError(format!("Error committing transaction: {}", e)));
+        }
 
         Ok(())
     }

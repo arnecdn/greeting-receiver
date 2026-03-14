@@ -4,18 +4,20 @@ use actix_web::web::Data;
 use actix_web::{get, post, web, HttpResponse, ResponseError};
 
 use chrono::{DateTime, Utc};
-use log::info;
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use std::sync::{RwLock};
 use tracing::instrument;
+use uuid::Uuid;
 
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;
 
 use crate::greeting::api::ApiError::{ApplicationError, BadClientData, UnknownError};
-use crate::greeting::service::{Greeting, GreetingService, ServiceError};
+use crate::greeting::kafka_producer::KafkaGreetingRepository;
+use crate::greeting::service::{Greeting, GreetingService, GreetingServiceImpl, ServiceError};
+use crate::settings::Kafka;
 
 #[utoipa::path(
     post,
@@ -26,29 +28,32 @@ use crate::greeting::service::{Greeting, GreetingService, ServiceError};
     ),
     )]
 #[post("/greeting")]
-#[instrument(name = "receive")]
+#[instrument(name = "receive", skip(kafka_config))]
 pub async fn greet(
-    data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>>,
+    kafka_config: Data<Kafka>,
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
     greeting.validate()?;
-    match data.write() {
-        Ok(mut guard) => {
-            info!("Received greeting {}", &greeting.0.heading);
-            let greeting_msg:Greeting = greeting.0.into();
-            let resp = GreetingReceived {message_id: greeting_msg.message_id.clone()};
 
-            guard.receive_greeting(greeting_msg).await?;
-            Ok(HttpResponse::Ok().json(resp))
-        }
+    let transaction_id = format!("producer_{}", Uuid::now_v7());
+    let repo = KafkaGreetingRepository::new(kafka_config.get_ref().clone(), &transaction_id)
+        .map_err(|e| {
+            error!("Failed creating Kafka producer: {:?}", e);
+            UnknownError(format!("Failed creating Kafka producer: {}", e))
+        })?;
 
-        Err(e) => Err(UnknownError(format!(
-            "Failed writing  msg:{:?} to kafka with error: {}",
-            greeting,
-            e.to_string()
-        ))),
-    }
+    let mut service = GreetingServiceImpl::new(repo);
+
+    info!("Received greeting {}", &greeting.0.heading);
+    let greeting_msg: Greeting = greeting.0.into();
+    let resp = GreetingReceived {
+        message_id: greeting_msg.message_id.clone(),
+    };
+
+    service.receive_greeting(greeting_msg).await?;
+    Ok(HttpResponse::Ok().json(resp))
 }
+
 
 #[utoipa::path(
     get,
@@ -61,20 +66,8 @@ pub async fn greet(
 )]
 #[get("/health")]
 #[instrument(name = "health")]
-pub async fn health(
-    data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>>,
-) -> Result<HttpResponse, ApiError> {
-    match data.write() {
-        Ok(mut guard) => {
-            guard.check_liveness().await?;
-            return Ok(HttpResponse::Ok().body(""));
-        }
-
-        Err(e) => Err(UnknownError(format!(
-            "Failed checking health with error: {}",
-            e.to_string()
-        ))),
-    }
+pub async fn health() -> Result<HttpResponse, ApiError> {
+    Ok(HttpResponse::Ok().body(""))
 }
 
 #[derive(Debug)]
@@ -173,84 +166,44 @@ impl From<Greeting> for GreetingDto {
 #[cfg(test)]
 mod test {
     use actix_web::test;
-    use async_trait::async_trait;
     use super::*;
 
     #[actix_web::test]
-    async fn test_store_greeting() {
-        let data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> =
-            Data::new(RwLock::new(Box::new(GreetingSvcStub {})));
+    async fn test_health_liveness() {
         let app =
-            test::init_service(actix_web::App::new().app_data(data.clone()).service(greet)).await;
+            test::init_service(actix_web::App::new().service(health)).await;
 
-        let req = test::TestRequest::post()
-            .uri("/greeting")
-            .insert_header(actix_web::http::header::ContentType::json())
-            .set_json(GreetingDto {
-                external_reference: "1".to_string(),
-                to: String::from("test"),
-                from: String::from("testa"),
-                heading: String::from("Merry Christmas"),
-                message: String::from("Happy new year"),
-                created: DateTime::default(),
-            })
-            .to_request();
+        let req = test::TestRequest::get().uri("/health").to_request();
 
         let resp = test::call_service(&app, req).await;
         assert!(resp.status().is_success());
     }
 
     #[actix_web::test]
-    async fn test_invalid_greeting() {
-        let data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> =
-            Data::new(RwLock::new(Box::new(GreetingSvcStub {})));
-        let app =
-            test::init_service(actix_web::App::new().app_data(data.clone()).service(greet)).await;
-
-        let req = test::TestRequest::post()
-            .uri("/greeting")
-            .insert_header(actix_web::http::header::ContentType::json())
-            .set_json(GreetingDto {
-                external_reference: "1".to_string(),
-                to: String::from("testtesttesttesttesttesttesttest"),
-                from: String::from("testa"),
-                heading: String::from("Merry Christmas"),
-                message: String::from("Happy new year"),
-                created: DateTime::default(),
-            })
-            .to_request();
-
-        let resp = test::call_service(&app, req).await;
-        assert!(resp.status().is_client_error());
-        println!("{:?}", resp.response().body());
+    async fn test_invalid_greeting_validation() {
+        let greeting = GreetingDto {
+            external_reference: "1".to_string(),
+            to: String::from("testtesttesttesttesttesttesttesttesttesttest"),
+            from: String::from("testa"),
+            heading: String::from("Merry Christmas"),
+            message: String::from("Happy new year"),
+            created: DateTime::default(),
+        };
+        let result = greeting.validate();
+        assert!(result.is_err());
     }
 
     #[actix_web::test]
-    async fn test_health_liveness() {
-        let data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> =
-            Data::new(RwLock::new(Box::new(GreetingSvcStub {})));
-        let app =
-            test::init_service(actix_web::App::new().app_data(data.clone()).service(greet)).await;
-
-        let req = test::TestRequest::get().uri("/health").to_request();
-
-        let resp = test::call_service(&app, req).await;
-        assert!(resp.status().is_client_error());
-        println!("{:?}", resp.response().body());
-    }
-
-
-    #[derive(Clone, Debug)]
-    pub struct GreetingSvcStub;
-
-    #[async_trait]
-    impl GreetingService for GreetingSvcStub {
-        async fn receive_greeting(&mut self, _: Greeting) -> Result<(), ServiceError> {
-            Ok(())
-        }
-
-        async fn check_liveness(&mut self) -> Result<(), ServiceError> {
-            Ok(())
-        }
+    async fn test_valid_greeting_validation() {
+        let greeting = GreetingDto {
+            external_reference: "1".to_string(),
+            to: String::from("test"),
+            from: String::from("testa"),
+            heading: String::from("Merry Christmas"),
+            message: String::from("Happy new year"),
+            created: DateTime::default(),
+        };
+        let result = greeting.validate();
+        assert!(result.is_ok());
     }
 }

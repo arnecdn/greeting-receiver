@@ -20,6 +20,7 @@ uuid = { version = "1.16.0", features = ["v7"]}
 rdkafka = { version = "0.37.0" }
 futures = "0.3"
 async-trait = "0.1.77"
+tokio = { version = "1", features = ["sync"] }
 log = { version = "0.4.20", features = [] }
 config = "0.14.0"
 dotenv = "0.15.0"

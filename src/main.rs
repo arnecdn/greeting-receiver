@@ -1,18 +1,12 @@
-use std::process::exit;
-use std::sync::RwLock;
-
 use actix_web::{App, HttpServer};
 
 use actix_web::web::Data;
 use log::{error, info};
 
-use greeting::{api, service};
+use greeting::api;
 use settings::Settings;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-
-use crate::greeting::kafka_producer::KafkaGreetingRepository;
-use crate::greeting::service::GreetingService;
 
 use actix_web_opentelemetry::RequestMetrics;
 use greeting_otel::init_otel;
@@ -42,28 +36,15 @@ async fn main() -> std::io::Result<()> {
     .await;
 
     info!("Starting server");
-    let transaction_id = format!("producer_1_{}", &app_config.kube.my_pod_name.clone());
-    let repo = match KafkaGreetingRepository::new(app_config.kafka, &transaction_id) {
-        Ok(r) => r,
-        Err(e) => {
-            error!("{:?}", e);
-            exit(1)
-        }
-    };
 
-    //Need explicit type in order to enforce type restrictions with dynamoc trait object allocation
-    let service_impl = service::GreetingServiceImpl::new(repo);
-    let svc: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> =
-        Data::new(RwLock::new(Box::new(service_impl)));
+    let kafka_config = Data::new(app_config.kafka);
 
     HttpServer::new(move || {
         App::new()
             .wrap(RequestMetrics::default())
-            .app_data(svc.clone())
+            .app_data(kafka_config.clone())
             .service(api::greet)
             .service(api::health)
-            //.wrap(RequestTracing::default())
-            //.wrap(RequestMetrics::default())
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}")
                     .url("/api-docs/openapi.json", ApiDoc::openapi()),
