@@ -62,6 +62,8 @@ impl GreetingRepository for KafkaGreetingRepository {
             .map_err(|e| ServiceError::RepoError(format!("Failed beginning transaction: {}", e)))?;
         info!("Sending msg id {}", msg.message_id);
 
+        let kafka_tx_timeout = Duration::from_secs(5);
+
         let send_result =  self.producer
             .send(
                 FutureRecord::to(&self.topic)
@@ -69,18 +71,18 @@ impl GreetingRepository for KafkaGreetingRepository {
                     .payload(&x)
                     .key(&msg.message_id)
                     .partition(-1),
-                Duration::from_secs(2),
+                kafka_tx_timeout,
             )
             .await;
 
         if let Err((e, _)) = send_result {
-            let _ = self.producer.abort_transaction(Duration::from_secs(2));
+            let _ = self.producer.abort_transaction(kafka_tx_timeout);
             info!("Failed sending message: {}", e);
             return Err(ServiceError::RepoError(format!("Failed sending message: {}", e)));
         }
 
-        if let Err(e) = self.producer.commit_transaction(Duration::from_secs(2)) {
-            let _ = self.producer.abort_transaction(Duration::from_secs(2));
+        if let Err(e) = self.producer.commit_transaction(kafka_tx_timeout) {
+            let _ = self.producer.abort_transaction(kafka_tx_timeout);
             info!("Failed sending message: {}", e);
             return Err(ServiceError::RepoError(format!("Error committing transaction: {}", e)));
         }

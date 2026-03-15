@@ -1,9 +1,9 @@
-TAG ?= 0.5
+TAG := $(shell [ -f ./kubernetes/version.txt ] || echo "0.1" > ./kubernetes/version.txt; cat ./kubernetes/version.txt)
 APP_NAME = greeting-receiver
 IMAGE_NAME = arnecdn/$(APP_NAME)
 KUBERNETES_FILE = kubernetes/$(APP_NAME).yaml
 
-.PHONY: build_app all build_image deploy clean validate-tag
+.PHONY: build_app all build_image deploy clean validate-tag increment-version undeploy
 
 all: build_image deploy
 
@@ -20,15 +20,25 @@ validate-tag:
 		exit 1; \
 	fi
 
-build_image: validate-tag
-	@echo "Building Docker image directly in Minikube..."
+increment-version:
+	@MAJOR=$$(echo $(TAG) | cut -d. -f1); \
+	MINOR=$$(echo $(TAG) | cut -d. -f2); \
+	NEW_MINOR=$$((MINOR + 1)); \
+	NEW_TAG="$$MAJOR.$$NEW_MINOR"; \
+	echo "$$NEW_TAG" > VERSION; \
+	echo "Version incremented: $(TAG) -> $$NEW_TAG"
+
+build_image: validate-tag increment-version
+	$(eval TAG := $(shell cat VERSION))
+	@echo "Building Docker image with tag $(TAG)..."
 	minikube image build -t "$(IMAGE_NAME):$(TAG)" -f Dockerfile . || { \
 		echo "Error: Docker build failed."; \
 		exit 1; \
 	}
 
 deploy: build_image
-	@echo "Applying Kubernetes deployment..."
+	@echo "Applying Kubernetes deployment with TAG=$(TAG)..."
+	sed -i '' 's|image: docker.io/arnecdn/greeting-receiver:.*|image: docker.io/arnecdn/greeting-receiver:$(TAG)|' $(KUBERNETES_FILE)
 	kubectl apply -f $(KUBERNETES_FILE) || { \
 		echo "Error: Failed to apply Kubernetes deployment."; \
 		exit 1; \
