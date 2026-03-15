@@ -1,7 +1,9 @@
-TAG := $(shell [ -f ./kubernetes/version.txt ] || echo "0.1" > ./kubernetes/version.txt; cat ./kubernetes/version.txt)
 APP_NAME = greeting-receiver
+
 IMAGE_NAME = arnecdn/$(APP_NAME)
 KUBERNETES_FILE = kubernetes/$(APP_NAME).yaml
+VERSION_FILE := ./kubernetes/version.txt
+TAG := $(shell [ -f $(VERSION_FILE) ] || echo "0.1" > $(VERSION_FILE); cat $(VERSION_FILE))
 
 .PHONY: build_app all build_image deploy clean validate-tag increment-version undeploy
 
@@ -25,11 +27,11 @@ increment-version:
 	MINOR=$$(echo $(TAG) | cut -d. -f2); \
 	NEW_MINOR=$$((MINOR + 1)); \
 	NEW_TAG="$$MAJOR.$$NEW_MINOR"; \
-	echo "$$NEW_TAG" > VERSION; \
+	echo "$$NEW_TAG" > $(VERSION_FILE); \
 	echo "Version incremented: $(TAG) -> $$NEW_TAG"
 
 build_image: validate-tag increment-version
-	$(eval TAG := $(shell cat VERSION))
+	$(eval TAG := $(shell cat $(VERSION_FILE)))
 	@echo "Building Docker image with tag $(TAG)..."
 	minikube image build -t "$(IMAGE_NAME):$(TAG)" -f Dockerfile . || { \
 		echo "Error: Docker build failed."; \

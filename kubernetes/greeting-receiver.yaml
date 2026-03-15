@@ -14,7 +14,7 @@ spec:
         spec:
             containers:
                 -   name: greeting-receiver
-                    image: docker.io/arnecdn/greeting-receiver:0.2
+                    image: docker.io/arnecdn/greeting-receiver:0.5
                     imagePullPolicy: IfNotPresent
                     livenessProbe:
                       httpGet:
