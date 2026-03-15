@@ -23,7 +23,7 @@ impl Settings {
 
     }
 }
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone)]
 pub (crate) struct Kafka {
     pub (crate) broker: String,
     pub (crate) topic: String,
