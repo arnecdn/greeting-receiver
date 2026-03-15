@@ -1,5 +1,5 @@
 /target
-/kubernetes/version.txt
+kubernetes/container_version_tag.txt
 .idea
 .docker
 .DS_Store
