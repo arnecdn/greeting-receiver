@@ -64,6 +64,9 @@ pub async fn greet(
 pub async fn health(
     data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>>,
 ) -> Result<HttpResponse, ApiError> {
+    if let Ok(mut guard) = data.write() {
+        guard.check_liveness().await.expect("Not live");
+    }
     Ok(HttpResponse::Ok().body(""))
 }
 
@@ -142,7 +145,7 @@ impl Into<Greeting> for GreetingDto {
             self.from.clone(),
             self.heading.clone(),
             self.message.clone(),
-            self.created.naive_utc(),
+            self.created.clone(),
         );
         received_greeting.add_event(&"received_greeting");
         received_greeting
@@ -156,7 +159,7 @@ impl From<Greeting> for GreetingDto {
             from: greeting.from.clone(),
             heading: greeting.heading.clone(),
             message: greeting.message.clone(),
-            created: greeting.created.and_utc(),
+            created: greeting.created.clone(),
         }
     }
 }

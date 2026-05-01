@@ -1,7 +1,7 @@
 use crate::greeting::service::{Greeting, GreetingRepository, ServiceError};
 use crate::settings::Kafka;
 use async_trait::async_trait;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use log::info;
 use opentelemetry::global;
 use opentelemetry::propagation::Injector;
@@ -97,6 +97,7 @@ impl From<KafkaError> for ServiceError {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct GreetingMessage {
     external_reference: String,
     message_id: String,
@@ -104,8 +105,8 @@ pub struct GreetingMessage {
     from: String,
     heading: String,
     message: String,
-    created: NaiveDateTime,
-    events_created: HashMap<String, NaiveDateTime>,
+    created: DateTime<Utc>,
+    events_created: HashMap<String, DateTime<Utc>>,
 }
 
 impl From<&Greeting> for GreetingMessage {
