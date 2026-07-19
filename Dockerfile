@@ -19,10 +19,7 @@ WORKDIR /app
 
 
 # Install host build dependencies.
-#RUN apk add --no-cache clang lld musl-dev git cmake g++ make
 RUN apt-get update && apt-get install -y --no-install-recommends cmake && rm -rf /var/lib/apt/lists/*
-#ENV SQLX_OFFLINE true
-
 
 # Build the application.
 COPY . .
@@ -52,13 +49,5 @@ COPY --chown=nonroot:nonroot --from=build /usr/bin/server /usr/bin/server
 
 USER nonroot:nonroot
 
-
-#RUN chmod -R 755 /bin/server
 # Expose the port that the application listens on.
 EXPOSE 8080
-
-# What the container should run when it is started.
-#WORKDIR "/bin/"
-#ENTRYPOINT ["/usr/bin/server"]
-#ENTRYPOINT ["tail"]
-#CMD ["-f","/dev/null"]
