@@ -14,7 +14,7 @@ pub trait GreetingService: Sync + Send + Debug {
     ) -> Result<(), ServiceError>;
 
     async fn check_liveness(
-        &mut self,
+        &self,
     ) -> Result<(), ServiceError>;
 }
 
@@ -49,7 +49,7 @@ impl<C: GreetingRepository + Sync + Send> GreetingService for GreetingServiceImp
         self.repo.store(greeting).await
     }
 
-    async fn check_liveness(&mut self) -> Result<(), ServiceError> {
+    async fn check_liveness(&self) -> Result<(), ServiceError> {
         Ok(())
     }
 }

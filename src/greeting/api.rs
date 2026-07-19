@@ -7,7 +7,7 @@ use chrono::{DateTime, Utc};
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use std::sync::{RwLock};
+use tokio::sync::RwLock;
 use tracing::instrument;
 
 use utoipa::ToSchema;
@@ -32,23 +32,13 @@ pub async fn greet(
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
     greeting.validate()?;
-    match data.write() {
-        Ok(mut guard) => {
-            info!("Received greeting {}", &greeting.0.heading);
-            let greeting_msg:Greeting = greeting.0.into();
-            let resp = GreetingReceived {message_id: greeting_msg.message_id.clone()};
-
-            guard.receive_greeting(greeting_msg).await?;
-            Ok(HttpResponse::Ok().json(resp))
-        }
-
-        Err(e) => Err(UnknownError(format!(
-            "Failed writing  msg:{:?} to kafka with error: {}",
-            greeting,
-            e.to_string()
-        ))),
-    }
+    let greeting_msg: Greeting = greeting.0.into();
+    let resp = GreetingReceived { message_id: greeting_msg.message_id.clone() };
+    info!("Received greeting {}", &greeting_msg.heading);
+    data.write().await.receive_greeting(greeting_msg).await?;
+    Ok(HttpResponse::Ok().json(resp))
 }
+
 
 #[utoipa::path(
     get,
@@ -64,9 +54,7 @@ pub async fn greet(
 pub async fn health(
     data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>>,
 ) -> Result<HttpResponse, ApiError> {
-    if let Ok(mut guard) = data.write() {
-        guard.check_liveness().await.expect("Not live");
-    }
+    data.read().await.check_liveness().await.expect("Not live");
     Ok(HttpResponse::Ok().body(""))
 }
 
@@ -243,7 +231,7 @@ mod test {
             Ok(())
         }
 
-        async fn check_liveness(&mut self) -> Result<(), ServiceError> {
+        async fn check_liveness(&self) -> Result<(), ServiceError> {
             Ok(())
         }
     }

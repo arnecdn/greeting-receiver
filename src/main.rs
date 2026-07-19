@@ -1,6 +1,6 @@
 
 use std::process::exit;
-use std::sync::RwLock;
+use tokio::sync::RwLock;
 
 use actix_web::{App, HttpServer};
 
