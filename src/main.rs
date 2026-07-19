@@ -63,10 +63,6 @@ async fn main() -> std::io::Result<()> {
             .app_data(svc.clone())
             .service(api::greet)
             .service(api::health)
-            //.wrap(RequestTracing::default())
-            //.wrap(RequestMetrics::default())
-            //.wrap(RequestTracing::default())
-            //.wrap(RequestMetrics::default())
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}")
                     .url("/api-docs/openapi.json", ApiDoc::openapi()),
