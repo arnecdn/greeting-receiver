@@ -43,7 +43,7 @@ impl KafkaGreetingRepository {
 }
 #[async_trait]
 impl GreetingRepository for KafkaGreetingRepository {
-    async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError> {
+    async fn store(&self, greeting: Greeting) -> Result<(), ServiceError> {
         let msg = GreetingMessage::from(&greeting.clone());
         let x = serde_json::to_string(&msg).unwrap();
         let parent_context = Span::current().context();

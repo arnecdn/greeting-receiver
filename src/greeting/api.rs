@@ -7,14 +7,13 @@ use chrono::{DateTime, Utc};
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use tokio::sync::RwLock;
 use tracing::instrument;
 
 use utoipa::ToSchema;
 use validator::{Validate, ValidationErrors};
 use validator_derive::Validate;
 
-use crate::greeting::api::ApiError::{ApplicationError, BadClientData, UnknownError};
+use crate::greeting::api::ApiError::{ApplicationError, BadClientData};
 use crate::greeting::service::{Greeting, GreetingService, ServiceError};
 
 #[utoipa::path(
@@ -28,14 +27,14 @@ use crate::greeting::service::{Greeting, GreetingService, ServiceError};
 #[post("/greeting")]
 #[instrument(name = "receive")]
 pub async fn greet(
-    data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>>,
+    data: Data<Box<dyn GreetingService + Sync + Send>>,
     greeting: web::Json<GreetingDto>,
 ) -> Result<HttpResponse, ApiError> {
     greeting.validate()?;
     let greeting_msg: Greeting = greeting.0.into();
     let resp = GreetingReceived { message_id: greeting_msg.message_id.clone() };
     info!("Received greeting {}", &greeting_msg.heading);
-    data.write().await.receive_greeting(greeting_msg).await?;
+    data.receive_greeting(greeting_msg).await?;
     Ok(HttpResponse::Ok().json(resp))
 }
 
@@ -52,9 +51,9 @@ pub async fn greet(
 #[get("/health")]
 #[instrument(name = "health")]
 pub async fn health(
-    data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>>,
+    data: Data<Box<dyn GreetingService + Sync + Send>>,
 ) -> Result<HttpResponse, ApiError> {
-    data.read().await.check_liveness().await.expect("Not live");
+    data.check_liveness().await.expect("Not live");
     Ok(HttpResponse::Ok().body(""))
 }
 
@@ -62,7 +61,6 @@ pub async fn health(
 pub enum ApiError {
     BadClientData(ValidationErrors),
     ApplicationError(ServiceError),
-    UnknownError(String),
 }
 
 impl ResponseError for ApiError {
@@ -70,7 +68,6 @@ impl ResponseError for ApiError {
         match *self {
             BadClientData(_) => StatusCode::BAD_REQUEST,
             ApplicationError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -86,7 +83,6 @@ impl Display for ApiError {
         match self {
             BadClientData(e) => write!(f, "Bad client data: {}", e),
             ApplicationError(e) => write!(f, "Application error: {}", e),
-            UnknownError(msg) => write!(f, "Application error: {}", msg),
         }
     }
 }
@@ -160,8 +156,8 @@ mod test {
 
     #[actix_web::test]
     async fn test_store_greeting() {
-        let data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> =
-            Data::new(RwLock::new(Box::new(GreetingSvcStub {})));
+        let data: Data<Box<dyn GreetingService + Sync + Send>> =
+            Data::new(Box::new(GreetingSvcStub {}));
         let app =
             test::init_service(actix_web::App::new().app_data(data.clone()).service(greet)).await;
 
@@ -184,8 +180,8 @@ mod test {
 
     #[actix_web::test]
     async fn test_invalid_greeting() {
-        let data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> =
-            Data::new(RwLock::new(Box::new(GreetingSvcStub {})));
+        let data: Data<Box<dyn GreetingService + Sync + Send>> =
+            Data::new(Box::new(GreetingSvcStub {}));
         let app =
             test::init_service(actix_web::App::new().app_data(data.clone()).service(greet)).await;
 
@@ -209,16 +205,15 @@ mod test {
 
     #[actix_web::test]
     async fn test_health_liveness() {
-        let data: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> =
-            Data::new(RwLock::new(Box::new(GreetingSvcStub {})));
+        let data: Data<Box<dyn GreetingService + Sync + Send>> =
+            Data::new(Box::new(GreetingSvcStub {}));
         let app =
-            test::init_service(actix_web::App::new().app_data(data.clone()).service(greet)).await;
+            test::init_service(actix_web::App::new().app_data(data.clone()).service(health)).await;
 
         let req = test::TestRequest::get().uri("/health").to_request();
 
         let resp = test::call_service(&app, req).await;
-        assert!(resp.status().is_client_error());
-        println!("{:?}", resp.response().body());
+        assert!(resp.status().is_success());
     }
 
 
@@ -227,7 +222,7 @@ mod test {
 
     #[async_trait]
     impl GreetingService for GreetingSvcStub {
-        async fn receive_greeting(&mut self, _: Greeting) -> Result<(), ServiceError> {
+        async fn receive_greeting(&self, _: Greeting) -> Result<(), ServiceError> {
             Ok(())
         }
 

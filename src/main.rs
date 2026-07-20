@@ -1,6 +1,4 @@
-
 use std::process::exit;
-use tokio::sync::RwLock;
 
 use actix_web::{App, HttpServer};
 
@@ -54,8 +52,7 @@ async fn main() -> std::io::Result<()> {
 
     //Need explicit type in order to enforce type restrictions with dynamoc trait object allocation
     let service_impl = service::GreetingServiceImpl::new(repo);
-    let svc: Data<RwLock<Box<dyn GreetingService + Sync + Send>>> =
-        Data::new(RwLock::new(Box::new(service_impl)));
+    let svc: Data<Box<dyn GreetingService + Sync + Send>> = Data::new(Box::new(service_impl));
 
     HttpServer::new(move || {
         App::new()
@@ -69,11 +66,12 @@ async fn main() -> std::io::Result<()> {
             )
     })
     .bind(("0.0.0.0", 8080))?
+    .workers(2)
     .run()
     .await
     .expect("Error stopping server");
 
-    if let Err(e) = providers.shutdown().await{
+    if let Err(e) = providers.shutdown().await {
         error!("Failed to shut down: {:?}", e);
     }
     Ok(())

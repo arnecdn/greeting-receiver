@@ -14,7 +14,7 @@ spec:
         spec:
             containers:
                 -   name: greeting-receiver
-                    image: docker.io/arnecdn/greeting-receiver:0.36
+                    image: docker.io/arnecdn/greeting-receiver:0.37
                     imagePullPolicy: IfNotPresent
                     livenessProbe:
                       httpGet:
@@ -35,10 +35,10 @@ spec:
                     resources:
                         requests:
                             memory: "256Mi"
-                            cpu: "256m"
+                            cpu: "512m"
                         limits:
                             memory: "256Mi"
-                            cpu: "256m"
+                            cpu: "512m"
                     ports:
                         -   containerPort: 8080
                     env:

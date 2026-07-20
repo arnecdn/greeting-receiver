@@ -9,7 +9,7 @@ use uuid::Uuid;
 #[async_trait]
 pub trait GreetingService: Sync + Send + Debug {
     async fn receive_greeting(
-        &mut self,
+        &self,
         greeting: Greeting,
     ) -> Result<(), ServiceError>;
 
@@ -20,7 +20,7 @@ pub trait GreetingService: Sync + Send + Debug {
 
 #[async_trait]
 pub trait GreetingRepository: Sync + Send {
-    async fn store(&mut self, greeting: Greeting) -> Result<(), ServiceError>;
+    async fn store(&self, greeting: Greeting) -> Result<(), ServiceError>;
 }
 
 pub struct GreetingServiceImpl<C> {
@@ -43,7 +43,7 @@ impl<C: GreetingRepository + Sync + Send> Debug for GreetingServiceImpl<C> {
 impl<C: GreetingRepository + Sync + Send> GreetingService for GreetingServiceImpl<C> {
     #[instrument]
     async fn receive_greeting(
-        &mut self,
+        &self,
         greeting: Greeting,
     ) -> Result<(), ServiceError> {
         self.repo.store(greeting).await
@@ -104,7 +104,7 @@ mod tests {
     #[test]
     fn test_receive_greeting() {
         let mock_repo = MockGreetingRepository::new();
-        let mut service = GreetingServiceImpl::new(mock_repo);
+        let service = GreetingServiceImpl::new(mock_repo);
 
         let greeting = Greeting::new(
             String::from("test_id"),
@@ -122,32 +122,26 @@ mod tests {
     #[test]
     fn check_liveness() {
         let mock_repo = MockGreetingRepository::new();
-        let mut service = GreetingServiceImpl::new(mock_repo);
+        let service = GreetingServiceImpl::new(mock_repo);
 
         let result = service.check_liveness();
         assert!(block_on(result).is_ok());
 
     }
 
-    struct MockGreetingRepository {
-        greetings: Vec<Greeting>,
-    }
+    struct MockGreetingRepository;
 
     impl MockGreetingRepository {
         fn new() -> Self {
-            Self {
-                greetings: Vec::new(),
-            }
+            Self
         }
     }
     #[async_trait]
     impl GreetingRepository for MockGreetingRepository {
         async fn store(
-            &mut self,
-            greeting: Greeting,
+            &self,
+            _greeting: Greeting,
         ) -> Result<(), ServiceError> {
-            let repo = &mut self.greetings;
-            repo.push(greeting);
             Ok(())
         }
 
