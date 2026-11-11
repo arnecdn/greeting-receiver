@@ -14,7 +14,7 @@ spec:
         spec:
             containers:
                 -   name: greeting-receiver
-                    image: docker.io/arnecdn/greeting-receiver:0.38
+                    image: docker.io/arnecdn/greeting-receiver:0.1
                     imagePullPolicy: IfNotPresent
                     livenessProbe:
                       httpGet:
@@ -44,7 +44,7 @@ spec:
                     env:
 
                         - name: APP__KAFKA__BROKER
-                          value: "kafka-service:9093"
+                          value: "kafka-service.kafka.svc.cluster.local:9092"
                         - name: APP__KAFKA__TOPIC
                           value: "greetings"
                         - name: APP__KAFKA__CONSUMER_GROUP
