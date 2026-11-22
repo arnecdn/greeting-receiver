@@ -35,7 +35,6 @@ The application is a Rust program that provides a simple greeting service.
 It can be built and run locally or within a Minikube environment.
 It dependends on a Kafka instance to send and receive greeting messages.
 
-
 ### Building the Application
 To build the Rust application, use the following command:
 
